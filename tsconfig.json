@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "outDir": "dist",
+        "target": "ES6",
+        "removeComments": true,
+        "module": "ES6",
+        "moduleResolution": "Node",
+        // "preserveConstEnums": true,
+        // "outFile": "./out/index.js",   
+    },
+    "include": ["src/**/*"]
+}
