@@ -83,9 +83,47 @@ export class Renderer {
             12, 13, 14,     12, 14, 15,   // bottom
             16, 17, 18,     16, 18, 19,   // right
             20, 21, 22,     20, 22, 23,   // left
-          ];
+        ];
 
-        this.meshTemplate = new MeshTemplate(this.gl, positions, indices);
+        const vertexNormals = [
+            // Front
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+        
+            // Back
+             0.0,  0.0, -1.0,
+             0.0,  0.0, -1.0,
+             0.0,  0.0, -1.0,
+             0.0,  0.0, -1.0,
+        
+            // Top
+             0.0,  1.0,  0.0,
+             0.0,  1.0,  0.0,
+             0.0,  1.0,  0.0,
+             0.0,  1.0,  0.0,
+        
+            // Bottom
+             0.0, -1.0,  0.0,
+             0.0, -1.0,  0.0,
+             0.0, -1.0,  0.0,
+             0.0, -1.0,  0.0,
+        
+            // Right
+             1.0,  0.0,  0.0,
+             1.0,  0.0,  0.0,
+             1.0,  0.0,  0.0,
+             1.0,  0.0,  0.0,
+        
+            // Left
+            -1.0,  0.0,  0.0,
+            -1.0,  0.0,  0.0,
+            -1.0,  0.0,  0.0,
+            -1.0,  0.0,  0.0
+        ];
+
+        this.meshTemplate = new MeshTemplate(this.gl, positions, indices, vertexNormals);
     }
 
     public render() {

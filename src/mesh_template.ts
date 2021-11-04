@@ -1,21 +1,28 @@
 import {loadShader} from './gl_helpers.js';
 declare var mat4: any;
 
+// A lot of this is taken/adapted from Mozilla's WebGL tutorials, particularly:
+// https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Lighting_in_WebGL
+
 export class MeshTemplate {
     private buffers: {
         position;
         positionCount: number;
         index;
         indexCount: number;
+        normal;
+        normalCount: number;
     };
     private programInfo: {
         program: WebGLProgram;
         attribLocations: {
             vertexPosition: number;
+            vertexNormal: number;
         };
         uniformLocations: {
             projectionMatrix: WebGLUniformLocation;
             modelViewMatrix: WebGLUniformLocation;
+            normalMatrix:WebGLUniformLocation;
         },
         vertexShaderSource: String;
         fragmentShaderSource: String;
@@ -23,7 +30,7 @@ export class MeshTemplate {
 
     private gl: WebGLRenderingContext;
     
-    constructor(gl: WebGLRenderingContext, positions, indices) {
+    constructor(gl: WebGLRenderingContext, positions, indices, normals: number[]) {
         this.gl = gl;
         // ~~~~~~~~~~ Program ~~~~~~~~~~~
         this.programInfo = {
@@ -32,17 +39,29 @@ export class MeshTemplate {
             uniformLocations: null,
             vertexShaderSource: `
                 attribute vec4 aVertexPosition;
-            
+                attribute vec3 aVertexNormal;
+
                 uniform mat4 uModelViewMatrix;
                 uniform mat4 uProjectionMatrix;
+                uniform mat4 uNormalMatrix;
+
+                varying highp vec3 vLighting;
             
                 void main() {
                     gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+                    highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
+                    highp vec3 directionalLightColor = vec3(1, 1, 1);
+                    highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+                    highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
+                    highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
+                    vLighting = ambientLight + (directionalLightColor * directional);
                 }
            `,
             fragmentShaderSource: `
+                varying highp vec3 vLighting;
                 void main() {
                     gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                    gl_FragColor = vec4(vLighting, 1);
                 }
            `,
         };
@@ -64,10 +83,12 @@ export class MeshTemplate {
       
         this.programInfo.attribLocations = {
             vertexPosition: this.gl.getAttribLocation(this.programInfo.program, 'aVertexPosition'),
+            vertexNormal: gl.getAttribLocation(this.programInfo.program, 'aVertexNormal')
         };
         this.programInfo.uniformLocations = {
             projectionMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uProjectionMatrix'),
             modelViewMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uModelViewMatrix'),
+            normalMatrix: gl.getUniformLocation(this.programInfo.program, 'uNormalMatrix')
         };
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -106,6 +127,30 @@ export class MeshTemplate {
             this.gl.STATIC_DRAW
         );
 
+        const normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer); 
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
+        // Tell WebGL how to pull out the normals from
+        // the normal buffer into the vertexNormal attribute.
+        {
+            const numComponents = 3;
+            const type = gl.FLOAT;
+            const normalize = false;
+            const stride = 0;
+            const offset = 0;
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+            gl.vertexAttribPointer(
+                this.programInfo.attribLocations.vertexNormal,
+                numComponents,
+                type,
+                normalize,
+                stride,
+                offset);
+            gl.enableVertexAttribArray(
+                this.programInfo.attribLocations.vertexNormal);
+        }
+
         // Unbind buffer
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null);
@@ -115,6 +160,8 @@ export class MeshTemplate {
             positionCount: positions.length,
             index: indexBuffer,
             indexCount: indices.length,
+            normal: normalBuffer,
+            normalCount: normals.length
         };
     }
 
@@ -123,7 +170,7 @@ export class MeshTemplate {
         const buffers = this.buffers;
         const gl = this.gl;
 
-         // Create a perspective matrix, a special matrix that is
+        // Create a perspective matrix, a special matrix that is
         // used to simulate the distortion of perspective in a camera.
         // Our field of view is 45 degrees, with a width/height
         // ratio that matches the display size of the canvas
@@ -163,7 +210,12 @@ export class MeshTemplate {
                     modelViewMatrix, 
                     rads,
                     [0.1, 0.1, 0.1]);
+
+        const normalMatrix = mat4.create();
+        mat4.invert(normalMatrix, modelViewMatrix);
+        mat4.transpose(normalMatrix, normalMatrix);
         
+
         // Set the shader uniforms
         gl.uniformMatrix4fv(
             programInfo.uniformLocations.projectionMatrix,
@@ -173,7 +225,12 @@ export class MeshTemplate {
             programInfo.uniformLocations.modelViewMatrix,
             false,
             modelViewMatrix);
-    
+
+        gl.uniformMatrix4fv(
+            programInfo.uniformLocations.normalMatrix,
+            false,
+            normalMatrix);
+            
         {
             const offset = 0;
             // gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
