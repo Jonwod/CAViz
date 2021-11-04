@@ -143,6 +143,27 @@ export class Renderer {
                       new Float32Array(positions),
                       this.gl.STATIC_DRAW);
       
+        // Tell WebGL how to pull out the positions from the position
+        // buffer into the vertexPosition attribute.
+        {
+            const numComponents = 3;  // pull out 2 values per iteration
+            const type = this.gl.FLOAT;    // the data in the buffer is 32bit floats
+            const normalize = false;  // don't normalize
+            const stride = 0;         // how many bytes to get from one set of values to the next
+                                      // 0 = use type and numComponents above
+            const offset = 0;         // how many bytes inside the buffer to start from
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
+            this.gl.vertexAttribPointer(
+                this.programInfo.attribLocations.vertexPosition,
+                numComponents,
+                type,
+                normalize,
+                stride,
+                offset);
+            this.gl.enableVertexAttribArray(
+                this.programInfo.attribLocations.vertexPosition);
+        }
+
         const indexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
         this.gl.bufferData(
@@ -191,28 +212,7 @@ export class Renderer {
                          aspect,
                          zNear,
                          zFar);
-      
-        // Tell WebGL how to pull out the positions from the position
-        // buffer into the vertexPosition attribute.
-        {
-          const numComponents = 3;  // pull out 2 values per iteration
-          const type = gl.FLOAT;    // the data in the buffer is 32bit floats
-          const normalize = false;  // don't normalize
-          const stride = 0;         // how many bytes to get from one set of values to the next
-                                    // 0 = use type and numComponents above
-          const offset = 0;         // how many bytes inside the buffer to start from
-          gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-          gl.vertexAttribPointer(
-              programInfo.attribLocations.vertexPosition,
-              numComponents,
-              type,
-              normalize,
-              stride,
-              offset);
-          gl.enableVertexAttribArray(
-              programInfo.attribLocations.vertexPosition);
-        }
-   
+ 
         gl.useProgram(programInfo.program);
 
         // Set the drawing position to the "identity" point, which is

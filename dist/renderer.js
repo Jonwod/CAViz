@@ -112,16 +112,6 @@ export class Renderer {
         const zFar = 1000.0;
         const projectionMatrix = mat4.create();
         mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
-        {
-            const numComponents = 3;
-            const type = gl.FLOAT;
-            const normalize = false;
-            const stride = 0;
-            const offset = 0;
-            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-            gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, numComponents, type, normalize, stride, offset);
-            gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-        }
         gl.useProgram(programInfo.program);
         const modelViewMatrix = mat4.create();
         const xRender = 0;
