@@ -36,39 +36,54 @@ export class Renderer {
 
     private initBuffers() {
         // An array of positions for the cube.
+        // Cube positions and indices are courtesy of
+        // Mozilla: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Creating_3D_objects_using_WebGL
         const positions = [
-            // Front square
-          -0.5,  0.5, 0.5, // top-left
-           0.5,  0.5, 0.5, // top-right
-          -0.5, -0.5, 0.5, // bottom-left
-           0.5, -0.5, 0.5, // bottom-right
-           // Back square
-          -0.5,  0.5, -0.5, // top-left
-           0.5,  0.5, -0.5, // top-right
-          -0.5, -0.5, -0.5, // bottom-left
-           0.5, -0.5, -0.5, // bottom-right
+            // Front face
+            -0.5, -0.5,  0.5,
+             0.5, -0.5,  0.5,
+             0.5,  0.5,  0.5,
+            -0.5,  0.5,  0.5,
+          
+            // Back face
+            -0.5, -0.5, -0.5,
+            -0.5,  0.5, -0.5,
+             0.5,  0.5, -0.5,
+             0.5, -0.5, -0.5,
+          
+            // Top face
+            -0.5,  0.5, -0.5,
+            -0.5,  0.5,  0.5,
+             0.5,  0.5,  0.5,
+             0.5,  0.5, -0.5,
+          
+            // Bottom face
+            -0.5, -0.5, -0.5,
+             0.5, -0.5, -0.5,
+             0.5, -0.5,  0.5,
+            -0.5, -0.5,  0.5,
+          
+            // Right face
+             0.5, -0.5, -0.5,
+             0.5,  0.5, -0.5,
+             0.5,  0.5,  0.5,
+             0.5, -0.5,  0.5,
+          
+            // Left face
+            -0.5, -0.5, -0.5,
+            -0.5, -0.5,  0.5,
+            -0.5,  0.5,  0.5,
+            -0.5,  0.5, -0.5,
         ];
-        // An array of indices specifying the triangles
+          
         const indices = [
-            // Front
-            0, 1, 2,
-            1, 2, 3,
-            // Bottom
-            2, 3, 6,
-            3, 6, 7,
-            // Top
-            0, 1, 4,
-            1, 4, 5,
-            // Back
-            6, 7, 4,
-            4, 5, 7,
-            // Left
-            0, 2, 6,
-            0, 4, 6,
-            // Right
-            1, 3, 7,
-            1, 5, 7
-        ];
+            0,  1,  2,      0,  2,  3,    // front
+            4,  5,  6,      4,  6,  7,    // back
+            8,  9,  10,     8,  10, 11,   // top
+            12, 13, 14,     12, 14, 15,   // bottom
+            16, 17, 18,     16, 18, 19,   // right
+            20, 21, 22,     20, 22, 23,   // left
+          ];
 
         this.meshTemplate = new MeshTemplate(this.gl, positions, indices);
     }
