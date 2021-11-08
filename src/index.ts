@@ -4,7 +4,7 @@ let renderer = new Renderer(500, 400);
 body.appendChild(renderer.getHTML());
 
 // hz
-const updateRate = 30.0;
+const updateRate = 60.0;
 let lastUpdate;
 
 function draw(timestamp) {
