@@ -32,7 +32,6 @@ export class Renderer {
 
         const fieldOfView = 45 * Math.PI / 180;   // in radians
         const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
-        console.log("aspect: " + aspect);
         const zNear = 0.1;
         const zFar = 1000.0;
         this.camera = new Camera(fieldOfView, aspect, zNear, zFar);
@@ -149,6 +148,7 @@ export class Renderer {
 
         // Allow for change in aspect ratio
         this.camera.setAspectRatio(aspect);
+        this.camera.processInput();
 
         for(let x = -5; x < 5; ++x) {
             for(let y = -5; y < 5; ++y) {
