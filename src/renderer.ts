@@ -1,5 +1,6 @@
 import { loadShader } from "./gl_helpers.js";
 import { MeshTemplate } from "./mesh_template.js";
+import { Camera } from "./camera.js";
 declare var mat4: any;
 export class Renderer {
     private rootElement: HTMLElement;
@@ -7,6 +8,7 @@ export class Renderer {
     private gl: WebGLRenderingContext;
 
     private meshTemplate: MeshTemplate;
+    private camera: Camera;
 
     constructor(width: number, height: number) {
         let div = document.createElement("div");
@@ -27,6 +29,13 @@ export class Renderer {
         div.appendChild(this.canvas);
 
         this.rootElement = div;
+
+        const fieldOfView = 45 * Math.PI / 180;   // in radians
+        const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
+        console.log("aspect: " + aspect);
+        const zNear = 0.1;
+        const zFar = 1000.0;
+        this.camera = new Camera(fieldOfView, aspect, zNear, zFar);
     }
 
     public getHTML(): HTMLElement {
@@ -134,27 +143,31 @@ export class Renderer {
         gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
       
         // Clear the canvas before we start drawing on it.
-      
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+        const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
 
-        // Set the drawing position to the "identity" point, which is
-        // the center of the scene.
-        const modelViewMatrix = mat4.create();
-        const xRender = 0;
-        const yRender = 0;
-        const zRender = -5;
-        
-        mat4.translate(modelViewMatrix,     // destination matrix
-                       modelViewMatrix,     // matrix to translate
-                       [xRender, yRender, zRender]);  // amount to translate
-        
-        // Making the cube rotate
-        const rads = Date.now()/1000;
-        mat4.rotate(modelViewMatrix, 
-                    modelViewMatrix, 
-                    rads,
-                    [0.1, 0.1, 0.1]);
-        this.meshTemplate.render(modelViewMatrix);
+        // Allow for change in aspect ratio
+        this.camera.setAspectRatio(aspect);
+
+        for(let x = -5; x < 5; ++x) {
+            for(let y = -5; y < 5; ++y) {
+                const modelViewMatrix = mat4.create();
+                const xRender = x;
+                const yRender = y;
+                const zRender = -10;
+                mat4.translate(modelViewMatrix,     // destination matrix
+                               modelViewMatrix,     // matrix to translate
+                               [xRender, yRender, zRender]);  // amount to translate
+                
+                // Making the cube rotate
+                const rads = Date.now()/1000;
+                mat4.rotate(modelViewMatrix, 
+                            modelViewMatrix, 
+                            rads,
+                            [0.1, 0.1, 0.1]);
+                this.meshTemplate.render(modelViewMatrix, this.camera.getPerspectiveMatrix());
+            }
+        }
     }
 }

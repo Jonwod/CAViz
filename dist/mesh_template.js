@@ -11,13 +11,13 @@ export class MeshTemplate {
                 attribute vec3 aVertexNormal;
 
                 uniform mat4 uModelViewMatrix;
-                uniform mat4 uProjectionMatrix;
+                uniform mat4 uPerspectiveMatrix;
                 uniform mat4 uNormalMatrix;
 
                 varying highp vec3 vLighting;
             
                 void main() {
-                    gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+                    gl_Position = uPerspectiveMatrix * uModelViewMatrix * aVertexPosition;
                     highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
                     highp vec3 directionalLightColor = vec3(1, 1, 1);
                     highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
@@ -49,7 +49,7 @@ export class MeshTemplate {
             vertexNormal: gl.getAttribLocation(this.programInfo.program, 'aVertexNormal')
         };
         this.programInfo.uniformLocations = {
-            projectionMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uProjectionMatrix'),
+            perspectiveMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uPerspectiveMatrix'),
             modelViewMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uModelViewMatrix'),
             normalMatrix: gl.getUniformLocation(this.programInfo.program, 'uNormalMatrix')
         };
@@ -93,21 +93,15 @@ export class MeshTemplate {
             normalCount: normals.length
         };
     }
-    render(modelViewMatrix) {
+    render(modelViewMatrix, perspectiveMatrix) {
         const programInfo = this.programInfo;
         const buffers = this.buffers;
         const gl = this.gl;
-        const fieldOfView = 45 * Math.PI / 180;
-        const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-        const zNear = 0.1;
-        const zFar = 1000.0;
-        const projectionMatrix = mat4.create();
-        mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
         gl.useProgram(programInfo.program);
         const normalMatrix = mat4.create();
         mat4.invert(normalMatrix, modelViewMatrix);
         mat4.transpose(normalMatrix, normalMatrix);
-        gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+        gl.uniformMatrix4fv(programInfo.uniformLocations.perspectiveMatrix, false, perspectiveMatrix);
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
         gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix, false, normalMatrix);
         {

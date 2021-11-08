@@ -20,7 +20,7 @@ export class MeshTemplate {
             vertexNormal: number;
         };
         uniformLocations: {
-            projectionMatrix: WebGLUniformLocation;
+            perspectiveMatrix: WebGLUniformLocation;
             modelViewMatrix: WebGLUniformLocation;
             normalMatrix:WebGLUniformLocation;
         },
@@ -42,13 +42,13 @@ export class MeshTemplate {
                 attribute vec3 aVertexNormal;
 
                 uniform mat4 uModelViewMatrix;
-                uniform mat4 uProjectionMatrix;
+                uniform mat4 uPerspectiveMatrix;
                 uniform mat4 uNormalMatrix;
 
                 varying highp vec3 vLighting;
             
                 void main() {
-                    gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+                    gl_Position = uPerspectiveMatrix * uModelViewMatrix * aVertexPosition;
                     highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
                     highp vec3 directionalLightColor = vec3(1, 1, 1);
                     highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
@@ -86,7 +86,7 @@ export class MeshTemplate {
             vertexNormal: gl.getAttribLocation(this.programInfo.program, 'aVertexNormal')
         };
         this.programInfo.uniformLocations = {
-            projectionMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uProjectionMatrix'),
+            perspectiveMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uPerspectiveMatrix'),
             modelViewMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uModelViewMatrix'),
             normalMatrix: gl.getUniformLocation(this.programInfo.program, 'uNormalMatrix')
         };
@@ -165,7 +165,7 @@ export class MeshTemplate {
         };
     }
 
-    public render(modelViewMatrix) {
+    public render(modelViewMatrix, perspectiveMatrix) {
         const programInfo = this.programInfo;
         const buffers = this.buffers;
         const gl = this.gl;
@@ -177,32 +177,17 @@ export class MeshTemplate {
         // and we only want to see objects between 0.1 units
         // and 100 units away from the camera.
       
-        const fieldOfView = 45 * Math.PI / 180;   // in radians
-        const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-        const zNear = 0.1;
-        const zFar = 1000.0;
-        const projectionMatrix = mat4.create();
-      
-        // note: glmatrix.js always has the first argument
-        // as the destination to receive the result.
-        mat4.perspective(projectionMatrix,
-                         fieldOfView,
-                         aspect,
-                         zNear,
-                         zFar);
- 
         gl.useProgram(programInfo.program);
 
         const normalMatrix = mat4.create();
         mat4.invert(normalMatrix, modelViewMatrix);
         mat4.transpose(normalMatrix, normalMatrix);
         
-
         // Set the shader uniforms
         gl.uniformMatrix4fv(
-            programInfo.uniformLocations.projectionMatrix,
+            programInfo.uniformLocations.perspectiveMatrix,
             false,
-            projectionMatrix);
+            perspectiveMatrix);
         gl.uniformMatrix4fv(
             programInfo.uniformLocations.modelViewMatrix,
             false,
