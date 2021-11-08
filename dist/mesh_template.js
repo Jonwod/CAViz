@@ -93,7 +93,7 @@ export class MeshTemplate {
             normalCount: normals.length
         };
     }
-    render() {
+    render(modelViewMatrix) {
         const programInfo = this.programInfo;
         const buffers = this.buffers;
         const gl = this.gl;
@@ -104,13 +104,6 @@ export class MeshTemplate {
         const projectionMatrix = mat4.create();
         mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
         gl.useProgram(programInfo.program);
-        const modelViewMatrix = mat4.create();
-        const xRender = 0;
-        const yRender = 0;
-        const zRender = -5;
-        mat4.translate(modelViewMatrix, modelViewMatrix, [xRender, yRender, zRender]);
-        const rads = Date.now() / 1000;
-        mat4.rotate(modelViewMatrix, modelViewMatrix, rads, [0.1, 0.1, 0.1]);
         const normalMatrix = mat4.create();
         mat4.invert(normalMatrix, modelViewMatrix);
         mat4.transpose(normalMatrix, normalMatrix);

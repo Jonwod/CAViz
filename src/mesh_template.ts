@@ -165,7 +165,7 @@ export class MeshTemplate {
         };
     }
 
-    public render() {
+    public render(modelViewMatrix) {
         const programInfo = this.programInfo;
         const buffers = this.buffers;
         const gl = this.gl;
@@ -192,24 +192,6 @@ export class MeshTemplate {
                          zFar);
  
         gl.useProgram(programInfo.program);
-
-        // Set the drawing position to the "identity" point, which is
-        // the center of the scene.
-        const modelViewMatrix = mat4.create();
-        const xRender = 0;
-        const yRender = 0;
-        const zRender = -5;
-        
-        mat4.translate(modelViewMatrix,     // destination matrix
-                       modelViewMatrix,     // matrix to translate
-                       [xRender, yRender, zRender]);  // amount to translate
-        
-        // Making the cube rotate
-        const rads = Date.now()/1000;
-        mat4.rotate(modelViewMatrix, 
-                    modelViewMatrix, 
-                    rads,
-                    [0.1, 0.1, 0.1]);
 
         const normalMatrix = mat4.create();
         mat4.invert(normalMatrix, modelViewMatrix);

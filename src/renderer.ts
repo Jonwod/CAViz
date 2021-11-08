@@ -136,6 +136,25 @@ export class Renderer {
         // Clear the canvas before we start drawing on it.
       
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        this.meshTemplate.render();
+
+
+        // Set the drawing position to the "identity" point, which is
+        // the center of the scene.
+        const modelViewMatrix = mat4.create();
+        const xRender = 0;
+        const yRender = 0;
+        const zRender = -5;
+        
+        mat4.translate(modelViewMatrix,     // destination matrix
+                       modelViewMatrix,     // matrix to translate
+                       [xRender, yRender, zRender]);  // amount to translate
+        
+        // Making the cube rotate
+        const rads = Date.now()/1000;
+        mat4.rotate(modelViewMatrix, 
+                    modelViewMatrix, 
+                    rads,
+                    [0.1, 0.1, 0.1]);
+        this.meshTemplate.render(modelViewMatrix);
     }
 }

@@ -88,6 +88,13 @@ export class Renderer {
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LEQUAL);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        this.meshTemplate.render();
+        const modelViewMatrix = mat4.create();
+        const xRender = 0;
+        const yRender = 0;
+        const zRender = -5;
+        mat4.translate(modelViewMatrix, modelViewMatrix, [xRender, yRender, zRender]);
+        const rads = Date.now() / 1000;
+        mat4.rotate(modelViewMatrix, modelViewMatrix, rads, [0.1, 0.1, 0.1]);
+        this.meshTemplate.render(modelViewMatrix);
     }
 }
