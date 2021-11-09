@@ -4,7 +4,6 @@ let renderer = new Renderer(500, 400);
 body.appendChild(renderer.getHTML());
 const updateRate = 60.0;
 let lastUpdate;
-document.getElementById('b1').addEventListener('mousedown', () => { console.log('mousedown event'); });
 function draw(timestamp) {
     if (lastUpdate === undefined)
         lastUpdate = timestamp;

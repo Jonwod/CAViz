@@ -1,10 +1,8 @@
 import * as keyboard from './keyboard.js';
-import { Vec3 } from './vec3.js';
 export class Camera {
     constructor(canvas, fieldOfView, aspectRatio, nearClip, farClip) {
         this.rotateRate = 0.1;
         this.translateRate = 0.1;
-        this.rotationOrigin = new Vec3(0, 0, 0);
         this.yaw = 0;
         this.pitch = 0;
         this.x = 0;
