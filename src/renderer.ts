@@ -34,7 +34,8 @@ export class Renderer {
         const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
         const zNear = 0.1;
         const zFar = 1000.0;
-        this.camera = new Camera(fieldOfView, aspect, zNear, zFar);
+
+        this.camera = new Camera( this.canvas, fieldOfView, aspect, zNear, zFar);
     }
 
     public getHTML(): HTMLElement {
@@ -155,7 +156,7 @@ export class Renderer {
                 const modelViewMatrix = mat4.create();
                 const xRender = x;
                 const yRender = y;
-                const zRender = -10;
+                const zRender = 0;
                 mat4.translate(modelViewMatrix,     // destination matrix
                                modelViewMatrix,     // matrix to translate
                                [xRender, yRender, zRender]);  // amount to translate
