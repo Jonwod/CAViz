@@ -18,10 +18,9 @@ export class Renderer {
         this.rootElement = div;
         const fieldOfView = 45 * Math.PI / 180;
         const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
-        console.log("aspect: " + aspect);
         const zNear = 0.1;
         const zFar = 1000.0;
-        this.camera = new Camera(fieldOfView, aspect, zNear, zFar);
+        this.camera = new Camera(this.canvas, fieldOfView, aspect, zNear, zFar);
     }
     getHTML() {
         return this.rootElement;
@@ -97,12 +96,13 @@ export class Renderer {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
         this.camera.setAspectRatio(aspect);
+        this.camera.processInput();
         for (let x = -5; x < 5; ++x) {
             for (let y = -5; y < 5; ++y) {
                 const modelViewMatrix = mat4.create();
                 const xRender = x;
                 const yRender = y;
-                const zRender = -10;
+                const zRender = 0;
                 mat4.translate(modelViewMatrix, modelViewMatrix, [xRender, yRender, zRender]);
                 const rads = Date.now() / 1000;
                 mat4.rotate(modelViewMatrix, modelViewMatrix, rads, [0.1, 0.1, 0.1]);
