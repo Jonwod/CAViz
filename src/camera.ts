@@ -7,7 +7,10 @@ export class Camera {
     private aspect: number;
     private nearClip: number;
     private farClip: number;
-    private rotateRate: number = 0.01;
+    // radians per unit time
+    private keyRotateRate: number = 0.1;
+    private mouseRotateRate: number = 0.01;
+    private mouseZoomRate: number = 0.1;
     private translateRate: number = 0.1;
     // private rotationOrigin: Vec3 = new Vec3(0, 0, 0);
     private yaw = 0;
@@ -22,9 +25,8 @@ export class Camera {
         this.nearClip = nearClip;
         this.farClip = farClip;
 
-        // onwheel seemingly not firing...
-        // canvas.addEventListener('onwheel', this.onWheelHandler, false);
         let that = this;
+        canvas.addEventListener('wheel', (e) => {that.onWheelHandler(e)}, false);
         canvas.addEventListener('mousedown', (e) => {that.onClickHandler(e)}, false);
         canvas.addEventListener('mousemove', (e) => {that.mouseMoveHandler(e)}, false);
     }
@@ -67,10 +69,10 @@ export class Camera {
         }
 
         if(keyboard.isKeyDown("KeyA")) {
-            this.yaw += this.rotateRate;
+            this.yaw += this.keyRotateRate;
         }
         if(keyboard.isKeyDown("KeyD")) {
-            this.yaw -= this.rotateRate;
+            this.yaw -= this.keyRotateRate;
         }
     }
 
@@ -87,16 +89,17 @@ export class Camera {
 
     private lastMousePosition: {x: number, y: number} = {x: NaN, y: NaN};
 
+    
     private mouseMoveHandler(event: MouseEvent) {
         // The problem is that this doesnt work in callback
         if(event.buttons > 0) {
             if(!isNaN(this.lastMousePosition.x)) {
                 const dx = event.clientX - this.lastMousePosition.x;
-                this.yaw += dx * this.rotateRate;
+                this.yaw += dx * this.mouseRotateRate;
             }
             if(!isNaN(this.lastMousePosition.y)) {
                 const dy = event.clientY - this.lastMousePosition.y;
-                this.pitch += dy * this.rotateRate;
+                this.pitch += dy * this.mouseRotateRate;
             }
 
             this.lastMousePosition = {x: event.clientX, y: event.clientY};
@@ -105,5 +108,9 @@ export class Camera {
         } else {
             this.lastMousePosition = {x: NaN, y: NaN};
         }
+    }
+
+    private onWheelHandler(event: WheelEvent) {
+        this.z += event.deltaY * this.mouseZoomRate;
     }
 }
