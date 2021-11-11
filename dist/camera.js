@@ -1,7 +1,9 @@
 import * as keyboard from './keyboard.js';
 export class Camera {
     constructor(canvas, fieldOfView, aspectRatio, nearClip, farClip) {
-        this.rotateRate = 0.1;
+        this.keyRotateRate = 0.1;
+        this.mouseRotateRate = 0.01;
+        this.mouseZoomRate = 0.1;
         this.translateRate = 0.1;
         this.yaw = 0;
         this.pitch = 0;
@@ -14,10 +16,10 @@ export class Camera {
         this.aspect = aspectRatio;
         this.nearClip = nearClip;
         this.farClip = farClip;
-        document.addEventListener('keydown', this.onKeyDown, false);
-        document.addEventListener('keyup', this.onKeyUp, false);
-        canvas.addEventListener('mousedown', this.onClickHandler, false);
-        canvas.addEventListener('mousemove', this.mouseMoveHandler, false);
+        let that = this;
+        canvas.addEventListener('wheel', (e) => { that.onWheelHandler(e); }, false);
+        canvas.addEventListener('mousedown', (e) => { that.onClickHandler(e); }, false);
+        canvas.addEventListener('mousemove', (e) => { that.mouseMoveHandler(e); }, false);
     }
     setAspectRatio(aspect) {
         this.aspect = aspect;
@@ -47,17 +49,11 @@ export class Camera {
             this.pitch -= this.translateRate;
         }
         if (keyboard.isKeyDown("KeyA")) {
-            this.yaw += this.rotateRate;
+            this.yaw += this.keyRotateRate;
         }
         if (keyboard.isKeyDown("KeyD")) {
-            this.yaw -= this.rotateRate;
+            this.yaw -= this.keyRotateRate;
         }
-    }
-    onKeyDown(event) {
-        console.log(event.code);
-    }
-    onKeyUp(event) {
-        console.log(event.code);
     }
     onClickHandler(event) {
         console.log(event);
@@ -66,11 +62,11 @@ export class Camera {
         if (event.buttons > 0) {
             if (!isNaN(this.lastMousePosition.x)) {
                 const dx = event.clientX - this.lastMousePosition.x;
-                this.yaw += dx * this.rotateRate;
+                this.yaw += dx * this.mouseRotateRate;
             }
             if (!isNaN(this.lastMousePosition.y)) {
-                const dy = event.clientY - this.lastMousePosition.x;
-                this.pitch += dy * this.rotateRate;
+                const dy = event.clientY - this.lastMousePosition.y;
+                this.pitch += dy * this.mouseRotateRate;
             }
             this.lastMousePosition = { x: event.clientX, y: event.clientY };
             console.log("yaw: " + this.yaw + "  pitch: " + this.pitch);
@@ -78,5 +74,8 @@ export class Camera {
         else {
             this.lastMousePosition = { x: NaN, y: NaN };
         }
+    }
+    onWheelHandler(event) {
+        this.z += event.deltaY * this.mouseZoomRate;
     }
 }
