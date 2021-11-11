@@ -7,7 +7,7 @@ export class Camera {
     private aspect: number;
     private nearClip: number;
     private farClip: number;
-    private rotateRate: number = 0.1;
+    private rotateRate: number = 0.01;
     private translateRate: number = 0.1;
     // private rotationOrigin: Vec3 = new Vec3(0, 0, 0);
     private yaw = 0;
@@ -24,10 +24,9 @@ export class Camera {
 
         // onwheel seemingly not firing...
         // canvas.addEventListener('onwheel', this.onWheelHandler, false);
-        document.addEventListener('keydown', this.onKeyDown, false);
-        document.addEventListener('keyup', this.onKeyUp, false);
-        canvas.addEventListener('mousedown', this.onClickHandler, false);
-        canvas.addEventListener('mousemove', this.mouseMoveHandler, false);
+        let that = this;
+        canvas.addEventListener('mousedown', (e) => {that.onClickHandler(e)}, false);
+        canvas.addEventListener('mousemove', (e) => {that.mouseMoveHandler(e)}, false);
     }
 
     public setAspectRatio(aspect: number) {
@@ -81,13 +80,6 @@ export class Camera {
         z: boolean;
     } = {x: false, y: false, z: false};
 
-    private onKeyDown(event: KeyboardEvent) {
-        console.log(event.code);
-    }
-
-    private onKeyUp(event) {
-        console.log(event.code);
-    }
 
     private onClickHandler(event) {
         console.log(event);
@@ -103,7 +95,7 @@ export class Camera {
                 this.yaw += dx * this.rotateRate;
             }
             if(!isNaN(this.lastMousePosition.y)) {
-                const dy = event.clientY - this.lastMousePosition.x;
+                const dy = event.clientY - this.lastMousePosition.y;
                 this.pitch += dy * this.rotateRate;
             }
 
