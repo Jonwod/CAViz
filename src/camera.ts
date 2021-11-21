@@ -84,7 +84,7 @@ export class Camera {
 
 
     private onClickHandler(event) {
-        console.log(event);
+        
     }
 
     private lastMousePosition: {x: number, y: number} = {x: NaN, y: NaN};
