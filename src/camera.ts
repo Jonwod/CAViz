@@ -104,7 +104,6 @@ export class Camera {
 
             this.lastMousePosition = {x: event.clientX, y: event.clientY};
             
-            console.log("yaw: " + this.yaw + "  pitch: " + this.pitch);
         } else {
             this.lastMousePosition = {x: NaN, y: NaN};
         }
