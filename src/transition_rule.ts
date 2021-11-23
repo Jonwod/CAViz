@@ -134,9 +134,12 @@ export class TotalisticTransitionRule extends TransitionRule {
     public computeSuccessorState(configuration: Configuration, cell: number[]): number {
         const cellValue = configuration.get(cell);
         let total = 0;
+
         this.getNeigbourhood().getOffsets().forEach((offset) => {
             total += configuration.get(vecAdd(cell, offset));
         });
+
+        console.log("n: " + total);
 
         for(let i = 0; i < this.singleStateRules[cellValue].transitions.length; ++i) {
             let ssr = this.singleStateRules[cellValue].transitions[i];

@@ -11,7 +11,7 @@ import {nDimensionalIterate} from "./n_dimensional_iterate.js";
 const nStates = 2;
 const nDimensions = 3;
 const neighbourhood = Neigbourhood.makeForDistance1(nDimensions);
-console.log(neighbourhood.getOffsets());
+// console.log(neighbourhood.getOffsets());
 const transitionRule = new TotalisticTransitionRule(nDimensions, neighbourhood,nStates,
     [
         {
@@ -40,10 +40,10 @@ const transitionRule = new TotalisticTransitionRule(nDimensions, neighbourhood,n
 );
 
 let testCA = new CellularAutomaton(nStates, nDimensions, transitionRule);
-let config = Configuration.makeRandom(3, 10, 2);
+let config = Configuration.makeRandom(3, 10, 2, 0.34);
+config.update(transitionRule);
+
 // config.print1D();
-console.log("updating");
-// config.update(transitionRule);
 // config.print1D();
 // NEXT STEP: apply update to configuration
 // Then: rendering
@@ -68,6 +68,7 @@ function draw(timestamp) {
         renderer.render(config);
         lastUpdate = timestamp;
     }
+
 
     window.requestAnimationFrame(draw);
 }

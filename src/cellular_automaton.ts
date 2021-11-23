@@ -16,8 +16,8 @@ export class CellularAutomaton {
         this.numDimensions = numDimensions;
     }
 
-    public makeRandomConfiguration(size: number): Configuration {
-        return Configuration.makeRandom(this.numDimensions, size, this.numStates);
+    public makeRandomConfiguration(size: number, populationDensity: number): Configuration {
+        return Configuration.makeRandom(this.numDimensions, size, this.numStates, populationDensity);
     }
 
     private numStates: number;
