@@ -2,6 +2,7 @@ import { assert } from "./assert.js";
 import { nDimensionalIterate } from "./n_dimensional_iterate.js";
 import { TransitionRule } from "./transition_rule.js";
 import { Range } from "./range.js";
+import * as ExtraMath from "./extra_math.js";
 
 export class Configuration {
     static makeRandom(dimensions: number, size: number, numStates: number): Configuration {
@@ -27,7 +28,7 @@ export class Configuration {
         assert(position.length === this.dimensions, 
             "wrong number of dimensions supplied to Configuration.get()");
         for(let i = 0; i < position.length; ++i) {
-            position[i] = position[i] % this.size;
+            position[i] = ExtraMath.trueMod(position[i], this.size);
         }
         return this.cells[this.to1D(position)];
     }
