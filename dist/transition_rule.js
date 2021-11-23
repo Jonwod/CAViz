@@ -84,6 +84,7 @@ export class TotalisticTransitionRule extends TransitionRule {
         this.getNeigbourhood().getOffsets().forEach((offset) => {
             total += configuration.get(vecAdd(cell, offset));
         });
+        console.log("n: " + total);
         for (let i = 0; i < this.singleStateRules[cellValue].transitions.length; ++i) {
             let ssr = this.singleStateRules[cellValue].transitions[i];
             if (ssr.range.contains(total)) {

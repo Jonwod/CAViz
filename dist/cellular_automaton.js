@@ -8,7 +8,7 @@ export class CellularAutomaton {
         this.numStates = numStates;
         this.numDimensions = numDimensions;
     }
-    makeRandomConfiguration(size) {
-        return Configuration.makeRandom(this.numDimensions, size, this.numStates);
+    makeRandomConfiguration(size, populationDensity) {
+        return Configuration.makeRandom(this.numDimensions, size, this.numStates, populationDensity);
     }
 }

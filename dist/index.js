@@ -6,7 +6,6 @@ import { Configuration } from "./configuration.js";
 const nStates = 2;
 const nDimensions = 3;
 const neighbourhood = Neigbourhood.makeForDistance1(nDimensions);
-console.log(neighbourhood.getOffsets());
 const transitionRule = new TotalisticTransitionRule(nDimensions, neighbourhood, nStates, [
     {
         startState: 0,
@@ -32,8 +31,8 @@ const transitionRule = new TotalisticTransitionRule(nDimensions, neighbourhood, 
     }
 ]);
 let testCA = new CellularAutomaton(nStates, nDimensions, transitionRule);
-let config = Configuration.makeRandom(3, 10, 2);
-console.log("updating");
+let config = Configuration.makeRandom(3, 10, 2, 0.34);
+config.update(transitionRule);
 let body = document.getElementsByTagName("body")[0];
 let renderer = new Renderer(500, 400);
 body.appendChild(renderer.getHTML());

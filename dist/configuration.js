@@ -3,11 +3,13 @@ import { nDimensionalIterate } from "./n_dimensional_iterate.js";
 import { Range } from "./range.js";
 import * as ExtraMath from "./extra_math.js";
 export class Configuration {
-    static makeRandom(dimensions, size, numStates) {
+    static makeRandom(dimensions, size, numStates, populationDensity) {
         let c = new Configuration();
         c.cells = [];
         for (let i = 0; i < Math.pow(size, dimensions); ++i) {
-            c.cells.push(Math.floor(Math.random() * numStates));
+            c.cells.push(Math.random() < populationDensity ?
+                Math.floor(Math.random() * numStates)
+                : 0);
         }
         c.size = size;
         c.dimensions = dimensions;
