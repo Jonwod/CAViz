@@ -1,5 +1,6 @@
 import { MeshTemplate } from "./mesh_template.js";
 import { Camera } from "./camera.js";
+import { assert } from "./assert.js";
 export class Renderer {
     constructor(width, height) {
         let div = document.createElement("div");
@@ -88,7 +89,7 @@ export class Renderer {
         ];
         this.meshTemplate = new MeshTemplate(this.gl, positions, indices, vertexNormals);
     }
-    render() {
+    render(configuration) {
         const gl = this.gl;
         gl.clearDepth(1.0);
         gl.enable(gl.DEPTH_TEST);
@@ -97,16 +98,19 @@ export class Renderer {
         const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
         this.camera.setAspectRatio(aspect);
         this.camera.processInput();
-        for (let x = -5; x < 5; ++x) {
-            for (let y = -5; y < 5; ++y) {
-                const modelViewMatrix = mat4.create();
-                const xRender = x;
-                const yRender = y;
-                const zRender = 0;
-                mat4.translate(modelViewMatrix, modelViewMatrix, [xRender, yRender, zRender]);
-                const rads = Date.now() / 1000;
-                mat4.rotate(modelViewMatrix, modelViewMatrix, rads, [0.1, 0.1, 0.1]);
-                this.meshTemplate.render(modelViewMatrix, this.camera.getPerspectiveMatrix());
+        assert(configuration.getNumDimensions() === 3, "TODO: implement render for N dimensions");
+        for (let x = 0; x < configuration.getSize(); ++x) {
+            for (let y = 0; y < configuration.getSize(); ++y) {
+                for (let z = 0; z < configuration.getSize(); ++z) {
+                    if (configuration.get([x, y, z]) > 0) {
+                        const modelViewMatrix = mat4.create();
+                        const xRender = x - configuration.getSize() / 2;
+                        const yRender = y - configuration.getSize() / 2;
+                        const zRender = z - configuration.getSize() / 2;
+                        mat4.translate(modelViewMatrix, modelViewMatrix, [xRender, yRender, zRender]);
+                        this.meshTemplate.render(modelViewMatrix, this.camera.getPerspectiveMatrix());
+                    }
+                }
             }
         }
     }

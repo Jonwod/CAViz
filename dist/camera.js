@@ -56,7 +56,6 @@ export class Camera {
         }
     }
     onClickHandler(event) {
-        console.log(event);
     }
     mouseMoveHandler(event) {
         if (event.buttons > 0) {
@@ -69,7 +68,6 @@ export class Camera {
                 this.pitch += dy * this.mouseRotateRate;
             }
             this.lastMousePosition = { x: event.clientX, y: event.clientY };
-            console.log("yaw: " + this.yaw + "  pitch: " + this.pitch);
         }
         else {
             this.lastMousePosition = { x: NaN, y: NaN };
