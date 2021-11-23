@@ -33,6 +33,14 @@ export class Configuration {
         return this.cells[this.to1D(position)];
     }
 
+    public getNumDimensions(): number {
+        return this.dimensions;
+    }
+
+    public getSize(): number {
+        return this.size;
+    }
+
     public update(transitionRule: TransitionRule) {
         assert(transitionRule.getNumDimensions() === this.dimensions, 
         "Transition rule dimensions doesn't match configuration");

@@ -41,10 +41,10 @@ const transitionRule = new TotalisticTransitionRule(nDimensions, neighbourhood,n
 
 let testCA = new CellularAutomaton(nStates, nDimensions, transitionRule);
 let config = Configuration.makeRandom(3, 10, 2);
-config.print1D();
+// config.print1D();
 console.log("updating");
-config.update(transitionRule);
-config.print1D();
+// config.update(transitionRule);
+// config.print1D();
 // NEXT STEP: apply update to configuration
 // Then: rendering
 // ====================================
@@ -65,7 +65,7 @@ function draw(timestamp) {
 
     if ( (elapsed/1000.0) >= (1.0/updateRate) ) {        
         // Do the rendering here
-        renderer.render();
+        renderer.render(config);
         lastUpdate = timestamp;
     }
 
