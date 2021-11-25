@@ -41,7 +41,6 @@ const transitionRule = new TotalisticTransitionRule(nDimensions, neighbourhood,n
 
 let testCA = new CellularAutomaton(nStates, nDimensions, transitionRule);
 let config = Configuration.makeRandom(3, 10, 2, 0.34);
-config.update(transitionRule);
 
 // config.print1D();
 // config.print1D();
@@ -67,6 +66,7 @@ function draw(timestamp) {
         // Do the rendering here
         renderer.render(config);
         lastUpdate = timestamp;
+        config.update(transitionRule);
     }
 
 
