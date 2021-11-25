@@ -60,6 +60,10 @@ export class Neigbourhood {
         return this.numDimensions;
     }
 
+    public getNumNeighbours(): number {
+        return this.offsets.length;
+    }
+
     private offsets: number[][];
     private numDimensions: number;
 }
