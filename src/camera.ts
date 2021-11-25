@@ -13,11 +13,11 @@ export class Camera {
     private mouseZoomRate: number = 0.1;
     private translateRate: number = 0.1;
     // private rotationOrigin: Vec3 = new Vec3(0, 0, 0);
-    private yaw = 0;
-    private pitch = 0;
+    private yaw = 0.2;
+    private pitch = 0.2;
     private x = 0;
     private y = 0;
-    private z = -10;
+    private z = -15;
 
     constructor( canvas: HTMLElement, fieldOfView: number, aspectRatio: number, nearClip: number, farClip: number) {
         this.fov = fieldOfView;
@@ -84,7 +84,7 @@ export class Camera {
 
 
     private onClickHandler(event) {
-        
+        console.log(event);
     }
 
     private lastMousePosition: {x: number, y: number} = {x: NaN, y: NaN};

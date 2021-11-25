@@ -54,21 +54,28 @@ let renderer = new Renderer(500, 400);
 body.appendChild(renderer.getHTML());
 
 // hz
-const updateRate = 60.0;
-let lastUpdate;
+const drawRate = 60.0;
+const caUpdateRate = 5.0;
+let lastDrawStamp, lastCaUpdateStamp;
 
 function draw(timestamp) {
-    if (lastUpdate === undefined)
-        lastUpdate = timestamp;
-    const elapsed = timestamp - lastUpdate;
+    if (lastDrawStamp === undefined)
+        lastDrawStamp = timestamp;
+    if(lastCaUpdateStamp === undefined)
+        lastCaUpdateStamp = timestamp;
+    const timeSinceDraw = timestamp - lastDrawStamp;
 
-    if ( (elapsed/1000.0) >= (1.0/updateRate) ) {        
+    if ( (timeSinceDraw/1000.0) >= (1.0/drawRate) ) {        
         // Do the rendering here
         renderer.render(config);
-        lastUpdate = timestamp;
-        config.update(transitionRule);
+        lastDrawStamp = timestamp;
     }
 
+    const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
+    if( (timeSinceCaUpdate/1000.0) >= (1.0/caUpdateRate) ) {
+        config.update(transitionRule);
+        lastCaUpdateStamp = timestamp;
+    }
 
     window.requestAnimationFrame(draw);
 }
