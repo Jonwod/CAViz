@@ -5,11 +5,11 @@ export class Camera {
         this.mouseRotateRate = 0.01;
         this.mouseZoomRate = 0.1;
         this.translateRate = 0.1;
-        this.yaw = 0;
-        this.pitch = 0;
+        this.yaw = 0.2;
+        this.pitch = 0.2;
         this.x = 0;
         this.y = 0;
-        this.z = -10;
+        this.z = -15;
         this.keyState = { x: false, y: false, z: false };
         this.lastMousePosition = { x: NaN, y: NaN };
         this.fov = fieldOfView;
@@ -56,6 +56,7 @@ export class Camera {
         }
     }
     onClickHandler(event) {
+        console.log(event);
     }
     mouseMoveHandler(event) {
         if (event.buttons > 0) {

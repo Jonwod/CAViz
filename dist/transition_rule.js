@@ -45,6 +45,9 @@ export class Neigbourhood {
     getNumDimensions() {
         return this.numDimensions;
     }
+    getNumNeighbours() {
+        return this.offsets.length;
+    }
 }
 export class TransitionRule {
     constructor(numDimensions, neigbourhood, numStates) {

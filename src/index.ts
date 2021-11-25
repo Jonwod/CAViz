@@ -6,41 +6,14 @@ import { Configuration } from "./configuration.js";
 import {nDimensionalIterate} from "./n_dimensional_iterate.js";
 import { transitionRuleFromBaysCoding } from "./bays_coding.js";
 
+console.log("Have I gone mad?");
 
 // ====== Constructing a test CA  ======
 // Bays' (5766) rule:
 const nStates = 2;
 const nDimensions = 3;
-// const neighbourhood = Neigbourhood.makeForDistance1(nDimensions);
-// // console.log(neighbourhood.getOffsets());
-// const transitionRule = new TotalisticTransitionRule(nDimensions, neighbourhood,nStates,
-//     [
-//         {
-//             startState: 0,
-//             transitions: [
-//                 {
-//                     endState: 1,
-//                     range: new Range(6, 6)
-//                 }
-//             ]
-//         },
-//         {
-//             startState: 1,
-//             transitions: [
-//                 {
-//                     endState: 0,
-//                     range: new Range(0, 4)
-//                 },
-//                 {
-//                     endState: 0,
-//                     range: new Range(6, 26)
-//                 }
-//             ]
-//         }
-//     ]
-// );
 
-const transitionRule = transitionRuleFromBaysCoding(5,7,6,6);
+const transitionRule = transitionRuleFromBaysCoding(10,21,10,21);
 
 let testCA = new CellularAutomaton(nStates, nDimensions, transitionRule);
 let config = Configuration.makeRandom(3, 10, 2, 0.34);
