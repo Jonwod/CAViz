@@ -5,7 +5,7 @@ import { transitionRuleFromBaysCoding } from "./bays_coding.js";
 console.log("Have I gone mad?");
 const nStates = 2;
 const nDimensions = 3;
-const transitionRule = transitionRuleFromBaysCoding(10, 21, 10, 21);
+const transitionRule = transitionRuleFromBaysCoding(4, 5, 2, 6);
 let testCA = new CellularAutomaton(nStates, nDimensions, transitionRule);
 let config = Configuration.makeRandom(3, 10, 2, 0.34);
 let body = document.getElementsByTagName("body")[0];
