@@ -167,36 +167,10 @@ export class Renderer {
                                        modelViewMatrix,     // matrix to translate
                                        [xRender, yRender, zRender]);  // amount to translate
                         
-                        // // Making the cube rotate
-                        // const rads = Date.now()/1000;
-                        // mat4.rotate(modelViewMatrix, 
-                        //             modelViewMatrix, 
-                        //             rads,
-                        //             [0.1, 0.1, 0.1]);
                         this.meshTemplate.render(modelViewMatrix, this.camera.getPerspectiveMatrix());
                     }
                 }
             }
         }
-
-        // for(let x = -5; x < 5; ++x) {
-        //     for(let y = -5; y < 5; ++y) {
-        //         const modelViewMatrix = mat4.create();
-        //         const xRender = x;
-        //         const yRender = y;
-        //         const zRender = 0;
-        //         mat4.translate(modelViewMatrix,     // destination matrix
-        //                        modelViewMatrix,     // matrix to translate
-        //                        [xRender, yRender, zRender]);  // amount to translate
-                
-        //         // Making the cube rotate
-        //         const rads = Date.now()/1000;
-        //         mat4.rotate(modelViewMatrix, 
-        //                     modelViewMatrix, 
-        //                     rads,
-        //                     [0.1, 0.1, 0.1]);
-        //         this.meshTemplate.render(modelViewMatrix, this.camera.getPerspectiveMatrix());
-        //     }
-        // }
     }
 }
