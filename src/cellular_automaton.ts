@@ -20,8 +20,21 @@ export class CellularAutomaton {
         return Configuration.makeRandom(this.numDimensions, size, this.numStates, populationDensity);
     }
 
+    public getNumStates(): number {
+        return this.numStates;
+    }
+
+    public getNumDimensions(): number {
+        return this.numDimensions;
+    }
+
+    public getTransitionRule(): TransitionRule {
+        return this.transitionRule;
+    }
+
     private numStates: number;
     private numDimensions: number;
+    private transitionRule: TransitionRule;
 
     // neigbourhood definition
 
