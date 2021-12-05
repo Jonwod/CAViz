@@ -7,8 +7,7 @@ import { Range } from "./range.js";
  * the range a-b is the number of neigbours required to keep a living cell alive
  * the range c-d is the number of neighbours required to make a new living cell
  */
-export function transitionRuleFromBaysCoding(a: number, b: number, c: number, d: number): TotalisticTransitionRule {
-    const nDimensions = 3;
+export function transitionRuleFromBaysCoding(nDimensions: number, keepAlive: Range, reproduce: Range): TotalisticTransitionRule {
     const nStates = 2;
     let singleStateTransitions = [
         {
@@ -16,7 +15,7 @@ export function transitionRuleFromBaysCoding(a: number, b: number, c: number, d:
             transitions: [
                 {
                     endState: 1,
-                    range: new Range(c, d)
+                    range: reproduce
                 }
             ]
         }
@@ -32,24 +31,24 @@ export function transitionRuleFromBaysCoding(a: number, b: number, c: number, d:
     // Add the 'death' transitions
     // there are potentially 3 deadzones: between 0 and the alive zone, between the alive zone and the reproduction zone
     // and between the reproduction zone and MAX
-    if(a > 0) {
+    if(keepAlive.getStart() > 0) {
         deathTransitions.transitions.push({
             endState: 0,
-            range: new Range(0, a-1)
+            range: new Range(0, keepAlive.getEnd() - 1)
         });
     }
 
-    if(c - b > 1) {
+    if(reproduce.getStart() - keepAlive.getEnd() > 1) {
         deathTransitions.transitions.push({
             endState: 0,
-            range: new Range(b+1, c-1)
+            range: new Range(keepAlive.getEnd()+1, reproduce.getStart()-1)
         });
     }
 
-    if(d < (neigbourhood.getNumNeighbours())) {
+    if(reproduce.getEnd() < (neigbourhood.getNumNeighbours())) {
         deathTransitions.transitions.push({
             endState: 0,
-            range: new Range(d, neigbourhood.getNumNeighbours())
+            range: new Range(reproduce.getEnd(), neigbourhood.getNumNeighbours())
         });
     }
 
