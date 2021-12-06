@@ -96,34 +96,48 @@ class CASimulation2D extends CASimulation {
             gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.worldTexture, level);
         }
           
-        this.programInfo = {
+        this.renderProgramInfo = {
             program: null,
             attribLocations: null,
             uniformLocations: null,
             vertexShaderSource: `
                 attribute vec4 aVertexPosition;
+                attribute vec2 aTexCoord;
+                varying vec2 vTexCoord;
             
                 void main() {
                     gl_Position = aVertexPosition;
+                    vTexCoord = aTexCoord;
                 }
-        `,
-        fragmentShaderSource: `
-            void main() {
-                gl_FragColor = vec4(0.0, 0.5, 0.5, 1.0);
-            }
-        `,
+            `,
+            fragmentShaderSource: `
+                precision mediump float;
+
+                // Passed in from the vertex shader.
+                varying vec2 vTexCoord;
+
+                // The texture.
+                uniform sampler2D uTexture;
+
+                void main() {
+                    gl_FragColor = texture2D(uTexture, vTexCoord);
+                }
+            `,
         }; 
 
+
         // ++++++++++++++++ PROGRAM ++++++++++++++++++++
-        this.programInfo.program = makeProgram(gl, this.programInfo.vertexShaderSource, this.programInfo.fragmentShaderSource);
+        this.renderProgramInfo.program = makeProgram(gl, this.renderProgramInfo.vertexShaderSource, this.renderProgramInfo.fragmentShaderSource);
               
-        this.programInfo.attribLocations = {
-            vertexPosition: this.gl.getAttribLocation(this.programInfo.program, 'aVertexPosition')
+        this.renderProgramInfo.attribLocations = {
+            vertexPosition: this.gl.getAttribLocation(this.renderProgramInfo.program, 'aVertexPosition'),
+            texCoord: this.gl.getAttribLocation(this.renderProgramInfo.program, "aTexCoord"),
         };
-        // this.programInfo.uniformLocations = {
-        //     perspectiveMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uPerspectiveMatrix'),
-        //     modelViewMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uModelViewMatrix')
-        // };
+        this.renderProgramInfo.uniformLocations = {
+            perspectiveMatrix: this.gl.getUniformLocation(this.renderProgramInfo.program, 'uPerspectiveMatrix'),
+            modelViewMatrix: this.gl.getUniformLocation(this.renderProgramInfo.program, 'uModelViewMatrix'),
+            uTexture: this.gl.getUniformLocation(this.renderProgramInfo.program, 'uTexture'),
+        };
         // +++++++++++++++++++++++++++++++++++++++++++++
 
         // ================== DATA =====================
@@ -134,11 +148,20 @@ class CASimulation2D extends CASimulation {
             0.5, 0.5, -.5   // tr
         ];
         const squareIndices = [0,1,2,0,2,3];
+        const squareUVs = [
+            0.0, 1.0,
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0
+        ];
+
         this.buffers = {
             position: null,
             positionCount: squareVerts.length,
             index: null,
-            indexCount: squareIndices.length
+            indexCount: squareIndices.length,
+            uv: null,
+            uvCount: null
         };
 
         // Setup position buffer
@@ -158,14 +181,14 @@ class CASimulation2D extends CASimulation {
             const offset = 0;         // how many bytes inside the buffer to start from
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers.position);
             this.gl.vertexAttribPointer(
-                this.programInfo.attribLocations.vertexPosition,
+                this.renderProgramInfo.attribLocations.vertexPosition,
                 numComponents,
                 type,
                 normalize,
                 stride,
                 offset);
             this.gl.enableVertexAttribArray(
-                this.programInfo.attribLocations.vertexPosition);
+                this.renderProgramInfo.attribLocations.vertexPosition);
         }
 
         // Setup index buffer
@@ -173,6 +196,24 @@ class CASimulation2D extends CASimulation {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareIndices), gl.STATIC_DRAW);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+        // UV buffer
+        this.buffers.uv = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.uv);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(squareUVs), gl.STATIC_DRAW);
+
+        // From https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL
+        // tell webgl how to pull out the texture coordinates from buffer
+        {
+            const num = 2; // every coordinate composed of 2 values
+            const type = gl.FLOAT; // the data in the buffer is 32 bit float
+            const normalize = false; // don't normalize
+            const stride = 0; // how many bytes to get from one set to the next
+            const offset = 0; // how many bytes inside the buffer to start from
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.uv);
+            gl.vertexAttribPointer(this.renderProgramInfo.attribLocations.texCoord, num, type, normalize, stride, offset);
+            gl.enableVertexAttribArray(this.renderProgramInfo.attribLocations.texCoord);
+        }
         // ============================================
     }
 
@@ -214,7 +255,12 @@ class CASimulation2D extends CASimulation {
         // This makes sure we are rendering to the canvas, not framebuffer
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-        gl.clearColor(0,0,0,1);
+        // Bind the world texture so as to draw it on the quad
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.worldTexture);
+        gl.uniform1i(this.renderProgramInfo.uniformLocations.uTexture, 0);
+
+        gl.clearColor(0.5,0.5,0.5,1);
         gl.clear(this.gl.COLOR_BUFFER_BIT);
 
         gl.clearDepth(1.0);                 // Clear everything
@@ -224,10 +270,10 @@ class CASimulation2D extends CASimulation {
         // Clear the canvas before we start drawing on it.
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        gl.useProgram(this.programInfo.program);
+        gl.useProgram(this.renderProgramInfo.program);
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
-        gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT,0);
+        gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
     }
 
     private update() {
@@ -235,14 +281,16 @@ class CASimulation2D extends CASimulation {
     }
 
     private worldTexture: WebGLTexture;
-    private programInfo: {
+    private renderProgramInfo: {
         program: WebGLProgram;
         attribLocations: {
             vertexPosition: number;
+            texCoord: number;  
         };
         uniformLocations: {
             perspectiveMatrix: WebGLUniformLocation;
             modelViewMatrix: WebGLUniformLocation;
+            uTexture: WebGLUniformLocation;
         },
         vertexShaderSource: String;
         fragmentShaderSource: String;
@@ -252,5 +300,7 @@ class CASimulation2D extends CASimulation {
         positionCount: number;
         index;
         indexCount: number;
+        uv;
+        uvCount: number;
     };
 }
