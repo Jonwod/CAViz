@@ -78,6 +78,10 @@ export class Configuration {
         console.log(this.cells);
     }
 
+    public getData(): Uint8Array {
+        return this.cells;
+    }
+
     private cells: Uint8Array;
     private buffer: Uint8Array;
     private dimensions: number;
