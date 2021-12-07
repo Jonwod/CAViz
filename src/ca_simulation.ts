@@ -71,12 +71,11 @@ class CASimulation2D extends CASimulation {
 
         {
             const level = 0;
-            // TODO: change this to one channel 'ALPHA'?
-            const internalFormat = gl.RGBA;
+            const internalFormat = gl.ALPHA;
             const border = 0;
-            const format = gl.RGBA;
+            const format = gl.ALPHA;
             const type = gl.UNSIGNED_BYTE;
-            const data = null;
+            const data = initialConfiguration.getData();
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
                 worldSize, worldSize, border,
                 format, type, data);
@@ -120,7 +119,8 @@ class CASimulation2D extends CASimulation {
                 uniform sampler2D uTexture;
 
                 void main() {
-                    gl_FragColor = texture2D(uTexture, vTexCoord);
+                    float x = texture2D(uTexture, vTexCoord).a * 255.0;
+                    gl_FragColor = vec4(x, x, x, 1);
                 }
             `,
         }; 
@@ -254,6 +254,11 @@ class CASimulation2D extends CASimulation {
 
         // This makes sure we are rendering to the canvas, not framebuffer
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      
+        // Clear the canvas before we start drawing on it.
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        gl.useProgram(this.renderProgramInfo.program);
 
         // Bind the world texture so as to draw it on the quad
         gl.activeTexture(gl.TEXTURE0);
@@ -266,11 +271,6 @@ class CASimulation2D extends CASimulation {
         gl.clearDepth(1.0);                 // Clear everything
         gl.enable(gl.DEPTH_TEST);           // Enable depth testing
         gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
-      
-        // Clear the canvas before we start drawing on it.
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        gl.useProgram(this.renderProgramInfo.program);
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
