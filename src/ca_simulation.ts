@@ -15,7 +15,6 @@ export function createSimulation(ca: CellularAutomaton,
     }
 }
 
-// TODO: Fill this out
 
 /**
  * A simulation of a particular Cellular Automaton, from the given start
@@ -50,6 +49,14 @@ export abstract class CASimulation {
         return this.rootElement;
     }
 
+    public getCanvasWidth(): number {
+        return this.canvas.width;
+    }
+
+    public getCanvasHeight(): number {
+        return this.canvas.height;
+    }
+
     /**
      * Will run indefinitely in it's own loop, updating the canvas
      * This function should be non-blocking
@@ -66,6 +73,7 @@ class CASimulation2D extends CASimulation {
         const gl = this.gl;
 
         const worldSize = 512;
+        this.worldSize = worldSize;
         this.worldTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.worldTexture);
 
@@ -87,8 +95,8 @@ class CASimulation2D extends CASimulation {
 
             // Create and bind the framebuffer
             // After binding the framebuffer, draw calls will draw to it
-            const fb = gl.createFramebuffer();
-            gl.bindFramebuffer(gl.FRAMEBUFFER, fb); 
+            this.frameBuffer = gl.createFramebuffer();
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer); 
             
             // attach the texture as the first color attachment
             const attachmentPoint = gl.COLOR_ATTACHMENT0;
@@ -123,10 +131,41 @@ class CASimulation2D extends CASimulation {
                     gl_FragColor = vec4(x, x, x, 1);
                 }
             `,
-        }; 
+        };
+
+        this.computeProgramInfo = {
+            program: null,
+            attribLocations: null,
+            uniformLocations: null,
+            vertexShaderSource: `
+                attribute vec4 aVertexPosition;
+                attribute vec2 aTexCoord;
+                varying vec2 vTexCoord;
+            
+                void main() {
+                    gl_Position = aVertexPosition;
+                    vTexCoord = aTexCoord;
+                }
+            `,
+            fragmentShaderSource: `
+                precision mediump float;
+
+                // Passed in from the vertex shader.
+                varying vec2 vTexCoord;
+
+                // The texture.
+                uniform sampler2D uTexture;
+
+                void main() {
+                    float x = texture2D(uTexture, vTexCoord).a;
+                    // Flip each pixel (testing)
+                    gl_FragColor = vec4(0, 0, 0, x == 0.0 ?  1.0 : 0.0);
+                }
+            `
+        }
 
 
-        // ++++++++++++++++ PROGRAM ++++++++++++++++++++
+        // ++++++++++++++++ RENDER PROGRAM ++++++++++++++++++++
         this.renderProgramInfo.program = makeProgram(gl, this.renderProgramInfo.vertexShaderSource, this.renderProgramInfo.fragmentShaderSource);
               
         this.renderProgramInfo.attribLocations = {
@@ -138,14 +177,25 @@ class CASimulation2D extends CASimulation {
             modelViewMatrix: this.gl.getUniformLocation(this.renderProgramInfo.program, 'uModelViewMatrix'),
             uTexture: this.gl.getUniformLocation(this.renderProgramInfo.program, 'uTexture'),
         };
-        // +++++++++++++++++++++++++++++++++++++++++++++
+        // +++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        // ++++++++++++++ COMPUTE PROGRAM ++++++++++++++++++++++
+        this.computeProgramInfo.program = makeProgram(gl, this.computeProgramInfo.vertexShaderSource, this.computeProgramInfo.fragmentShaderSource);
+        this.computeProgramInfo.attribLocations = {
+            vertexPosition: this.gl.getAttribLocation(this.renderProgramInfo.program, 'aVertexPosition'),
+            texCoord: this.gl.getAttribLocation(this.renderProgramInfo.program, "aTexCoord"),
+        };
+        this.computeProgramInfo.uniformLocations = {
+            uTexture: this.gl.getUniformLocation(this.renderProgramInfo.program, 'uTexture'),
+        };
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         // ================== DATA =====================
         const squareVerts = [
-            -0.5, 0.5, -.5, // tl
-            -0.5,-0.5,-.5,  // bl
-            0.5,-0.5,-.5,   // br
-            0.5, 0.5, -.5   // tr
+            -1, 1, 0, // tl
+            -1,-1, 0,  // bl
+             1,-1, 0,   // br
+             1, 1, 0   // tr
         ];
         const squareIndices = [0,1,2,0,2,3];
         const squareUVs = [
@@ -254,6 +304,7 @@ class CASimulation2D extends CASimulation {
 
         // This makes sure we are rendering to the canvas, not framebuffer
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, this.getCanvasWidth(), this.getCanvasHeight());
       
         // Clear the canvas before we start drawing on it.
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -276,11 +327,27 @@ class CASimulation2D extends CASimulation {
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
     }
 
+    /**
+     * Update the world texture on the GPU
+     */
     private update() {
+        const gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+        gl.bindTexture(gl.TEXTURE_2D, this.worldTexture);
+        gl.viewport(0, 0, this.worldSize, this.worldSize);
+        gl.useProgram(this.computeProgramInfo.program);
 
+        // Perhaps can have 2 textures and alternate them between the framebuffer and this?
+        gl.uniform1i(this.renderProgramInfo.uniformLocations.uTexture, 0);
+
+        // Drawing quad
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
+        gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
     }
 
     private worldTexture: WebGLTexture;
+    private worldSize: number;
+    private frameBuffer: WebGLFramebuffer;
     private renderProgramInfo: {
         program: WebGLProgram;
         attribLocations: {
@@ -291,7 +358,7 @@ class CASimulation2D extends CASimulation {
             perspectiveMatrix: WebGLUniformLocation;
             modelViewMatrix: WebGLUniformLocation;
             uTexture: WebGLUniformLocation;
-        },
+        };
         vertexShaderSource: String;
         fragmentShaderSource: String;
     };
@@ -302,5 +369,18 @@ class CASimulation2D extends CASimulation {
         indexCount: number;
         uv;
         uvCount: number;
+    };
+
+    private computeProgramInfo: {
+        program: WebGLProgram;
+        attribLocations: {
+            vertexPosition: number;
+            texCoord: number;  
+        };
+        uniformLocations: {
+            uTexture: WebGLUniformLocation;
+        };
+        vertexShaderSource: String;
+        fragmentShaderSource: String;
     };
 }
