@@ -7,14 +7,10 @@ import * as ExtraMath from "./extra_math.js";
 export class Configuration {
     static makeRandom(dimensions: number, size: number, numStates: number, populationDensity: number): Configuration {
         let c = new Configuration();
-        c.cells = [];
+        c.cells = new Uint8Array(Math.pow(size, dimensions));
         for(let i = 0; i < Math.pow(size, dimensions); ++i) {
             // TODO: This would be better as a probability distribution over the states
-            c.cells.push(
-                Math.random() < populationDensity ?
-                    Math.floor(Math.random() * numStates)
-                    : 0
-            );
+            c.cells[i] = (Math.random() < populationDensity ? Math.floor(Math.random() * numStates) : 0);
         }
         c.size = size;
         c.dimensions = dimensions;
@@ -50,7 +46,7 @@ export class Configuration {
         assert(transitionRule.getNumDimensions() === this.dimensions, 
         "Transition rule dimensions doesn't match configuration");
         if(typeof(this.buffer) === 'undefined') {
-            this.buffer = new Array(this.cells.length);
+            this.buffer = new Uint8Array(this.cells.length);
         }
 
         let dimensionRanges = [];
@@ -82,9 +78,8 @@ export class Configuration {
         console.log(this.cells);
     }
 
-    // arranged in order 
-    private cells: number[];
-    private buffer: number[];
+    private cells: Uint8Array;
+    private buffer: Uint8Array;
     private dimensions: number;
     private size: number;
 }
