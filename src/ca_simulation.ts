@@ -74,19 +74,41 @@ class CASimulation2D extends CASimulation {
 
         const worldSize = 512;
         this.worldSize = worldSize;
-        this.worldTexture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, this.worldTexture);
+        this.readBuffer = gl.createTexture();
+        this.writeBuffer = gl.createTexture();
 
         {
             const level = 0;
-            const internalFormat = gl.ALPHA;
+            const internalFormat = gl.RGBA;
             const border = 0;
-            const format = gl.ALPHA;
+            const format = gl.RGBA;
             const type = gl.UNSIGNED_BYTE;
-            const data = initialConfiguration.getData();
+            const initConf = initialConfiguration.getData();
+
+            // Init readbuffer to initial CA configuration
+            let data = new Uint8Array(initConf.length * 4);
+            for(let i = 0, j = 0; i < initConf.length; ++i) {
+                // This is silly
+                data[j++] = initConf[i];
+                data[j++] = initConf[i];
+                data[j++] = initConf[i];
+                data[j++] = initConf[i];
+            }
+            gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
                 worldSize, worldSize, border,
                 format, type, data);
+
+            // set the filtering so we don't need mips
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+            // Init writebuffer
+            gl.bindTexture(gl.TEXTURE_2D, this.writeBuffer);
+            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                worldSize, worldSize, border,
+                format, type, null);
 
             // set the filtering so we don't need mips
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -100,9 +122,10 @@ class CASimulation2D extends CASimulation {
             
             // attach the texture as the first color attachment
             const attachmentPoint = gl.COLOR_ATTACHMENT0;
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.worldTexture, level);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, level);
         }
-          
+
+
         this.renderProgramInfo = {
             program: null,
             attribLocations: null,
@@ -124,10 +147,10 @@ class CASimulation2D extends CASimulation {
                 varying vec2 vTexCoord;
 
                 // The texture.
-                uniform sampler2D uTexture;
+                uniform sampler2D uReadBuffer;
 
                 void main() {
-                    float x = texture2D(uTexture, vTexCoord).a * 255.0;
+                    float x = texture2D(uReadBuffer, vTexCoord).a * 255.0;
                     gl_FragColor = vec4(x, x, x, 1);
                 }
             `,
@@ -154,12 +177,13 @@ class CASimulation2D extends CASimulation {
                 varying vec2 vTexCoord;
 
                 // The texture.
-                uniform sampler2D uTexture;
+                uniform sampler2D uReadBuffer;
 
                 void main() {
-                    float x = texture2D(uTexture, vTexCoord).a;
+                    float x = texture2D(uReadBuffer, vTexCoord).a;
                     // Flip each pixel (testing)
                     gl_FragColor = vec4(0, 0, 0, x == 0.0 ?  1.0 : 0.0);
+                    // gl_FragColor = vec4(0, 0, 0, 0.55/255.0);
                 }
             `
         }
@@ -175,18 +199,18 @@ class CASimulation2D extends CASimulation {
         this.renderProgramInfo.uniformLocations = {
             perspectiveMatrix: this.gl.getUniformLocation(this.renderProgramInfo.program, 'uPerspectiveMatrix'),
             modelViewMatrix: this.gl.getUniformLocation(this.renderProgramInfo.program, 'uModelViewMatrix'),
-            uTexture: this.gl.getUniformLocation(this.renderProgramInfo.program, 'uTexture'),
+            uReadBuffer: this.gl.getUniformLocation(this.renderProgramInfo.program, 'uReadBuffer'),
         };
         // +++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         // ++++++++++++++ COMPUTE PROGRAM ++++++++++++++++++++++
         this.computeProgramInfo.program = makeProgram(gl, this.computeProgramInfo.vertexShaderSource, this.computeProgramInfo.fragmentShaderSource);
         this.computeProgramInfo.attribLocations = {
-            vertexPosition: this.gl.getAttribLocation(this.renderProgramInfo.program, 'aVertexPosition'),
-            texCoord: this.gl.getAttribLocation(this.renderProgramInfo.program, "aTexCoord"),
+            vertexPosition: this.gl.getAttribLocation(this.computeProgramInfo.program, 'aVertexPosition'),
+            texCoord: this.gl.getAttribLocation(this.computeProgramInfo.program, "aTexCoord"),
         };
         this.computeProgramInfo.uniformLocations = {
-            uTexture: this.gl.getUniformLocation(this.renderProgramInfo.program, 'uTexture'),
+            uReadBuffer: this.gl.getUniformLocation(this.computeProgramInfo.program, 'uReadBuffer'),
         };
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -267,6 +291,18 @@ class CASimulation2D extends CASimulation {
         // ============================================
     }
 
+    private swapBuffers() {
+        const gl = this.gl;
+
+        const temp = this.readBuffer;
+        this.readBuffer = this.writeBuffer;
+        this.writeBuffer = temp;
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer); 
+        const attachmentPoint = gl.COLOR_ATTACHMENT0;
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, 0);
+    }
+
     public run(): void {
         // hz
         const drawRate = 60.0;
@@ -313,8 +349,8 @@ class CASimulation2D extends CASimulation {
 
         // Bind the world texture so as to draw it on the quad
         gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this.worldTexture);
-        gl.uniform1i(this.renderProgramInfo.uniformLocations.uTexture, 0);
+        gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
+        gl.uniform1i(this.renderProgramInfo.uniformLocations.uReadBuffer, 0);
 
         gl.clearColor(0.5,0.5,0.5,1);
         gl.clear(this.gl.COLOR_BUFFER_BIT);
@@ -333,19 +369,23 @@ class CASimulation2D extends CASimulation {
     private update() {
         const gl = this.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-        gl.bindTexture(gl.TEXTURE_2D, this.worldTexture);
         gl.viewport(0, 0, this.worldSize, this.worldSize);
         gl.useProgram(this.computeProgramInfo.program);
 
-        // Perhaps can have 2 textures and alternate them between the framebuffer and this?
-        gl.uniform1i(this.renderProgramInfo.uniformLocations.uTexture, 0);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
+        gl.uniform1i(this.computeProgramInfo.uniformLocations.uReadBuffer, 0);
 
         // Drawing quad
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
+
+        this.swapBuffers();
     }
 
-    private worldTexture: WebGLTexture;
+    private writeBuffer: WebGLTexture;
+    private readBuffer: WebGLTexture;
+
     private worldSize: number;
     private frameBuffer: WebGLFramebuffer;
     private renderProgramInfo: {
@@ -357,7 +397,7 @@ class CASimulation2D extends CASimulation {
         uniformLocations: {
             perspectiveMatrix: WebGLUniformLocation;
             modelViewMatrix: WebGLUniformLocation;
-            uTexture: WebGLUniformLocation;
+            uReadBuffer: WebGLUniformLocation;
         };
         vertexShaderSource: String;
         fragmentShaderSource: String;
@@ -378,7 +418,7 @@ class CASimulation2D extends CASimulation {
             texCoord: number;  
         };
         uniformLocations: {
-            uTexture: WebGLUniformLocation;
+            uReadBuffer: WebGLUniformLocation;
         };
         vertexShaderSource: String;
         fragmentShaderSource: String;
