@@ -17,7 +17,14 @@ export function loadShader(gl, type, source): WebGLShader {
   // See if it compiled successfully
 
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    alert('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+    let msg = 'An error occurred compiling the shader: ' + gl.getShaderInfoLog(shader);
+    msg += '\n CODE: \n';
+    const lines = source.split('\n');
+    for(let l = 0; l < lines.length; ++l) {
+      msg +=  (l+1).toString() +"    "+ lines[l] + '\n';
+    }
+
+    alert(msg);
     gl.deleteShader(shader);
     return null;
   }
