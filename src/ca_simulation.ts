@@ -144,18 +144,20 @@ class CASimulation2D extends CASimulation {
             fragmentShaderSource: `#version 300 es
                 // ~~~ Render Fragment Shader ~~~
                 precision mediump float;
+                precision lowp usampler2D;
 
                 // Passed in from the vertex shader.
                 in vec2 vTexCoord;
 
                 // The texture.
-                uniform sampler2D uReadBuffer;
+                uniform usampler2D uReadBuffer;
 
                 out vec4 fragColor;
 
                 void main() {
-                    float x = texture(uReadBuffer, vTexCoord).a;
-                    fragColor = vec4(x, x, x, 1);
+                    uint x = texture(uReadBuffer, vTexCoord).a;
+                    float drawValue = x == 1u ? 1.0 : 0.0;
+                    fragColor = vec4(drawValue, drawValue, drawValue, 1);
                 }
             `,
         };
