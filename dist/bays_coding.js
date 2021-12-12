@@ -1,8 +1,7 @@
 import { TotalisticTransitionRule } from "./transition_rule.js";
 import { Neigbourhood } from "./transition_rule.js";
 import { Range } from "./range.js";
-export function transitionRuleFromBaysCoding(a, b, c, d) {
-    const nDimensions = 3;
+export function transitionRuleFromBaysCoding(nDimensions, keepAlive, reproduce) {
     const nStates = 2;
     let singleStateTransitions = [
         {
@@ -10,7 +9,7 @@ export function transitionRuleFromBaysCoding(a, b, c, d) {
             transitions: [
                 {
                     endState: 1,
-                    range: new Range(c, d)
+                    range: reproduce
                 }
             ]
         }
@@ -20,22 +19,22 @@ export function transitionRuleFromBaysCoding(a, b, c, d) {
         transitions: []
     };
     const neigbourhood = Neigbourhood.makeForDistance1(nDimensions);
-    if (a > 0) {
+    if (keepAlive.getStart() > 0) {
         deathTransitions.transitions.push({
             endState: 0,
-            range: new Range(0, a - 1)
+            range: new Range(0, keepAlive.getEnd() - 1)
         });
     }
-    if (c - b > 1) {
+    if (reproduce.getStart() - keepAlive.getEnd() > 1) {
         deathTransitions.transitions.push({
             endState: 0,
-            range: new Range(b + 1, c - 1)
+            range: new Range(keepAlive.getEnd() + 1, reproduce.getStart() - 1)
         });
     }
-    if (d < (neigbourhood.getNumNeighbours())) {
+    if (reproduce.getEnd() < (neigbourhood.getNumNeighbours())) {
         deathTransitions.transitions.push({
             endState: 0,
-            range: new Range(d, neigbourhood.getNumNeighbours())
+            range: new Range(reproduce.getEnd(), neigbourhood.getNumNeighbours())
         });
     }
     singleStateTransitions.push(deathTransitions);

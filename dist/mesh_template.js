@@ -1,4 +1,4 @@
-import { loadShader } from './gl_helpers.js';
+import { makeProgram } from './gl_helpers.js';
 export class MeshTemplate {
     constructor(gl, positions, indices, normals) {
         this.gl = gl;
@@ -34,16 +34,7 @@ export class MeshTemplate {
                 }
            `,
         };
-        const vertexShader = loadShader(this.gl, this.gl.VERTEX_SHADER, this.programInfo.vertexShaderSource);
-        const fragmentShader = loadShader(this.gl, this.gl.FRAGMENT_SHADER, this.programInfo.fragmentShaderSource);
-        this.programInfo.program = this.gl.createProgram();
-        this.gl.attachShader(this.programInfo.program, vertexShader);
-        this.gl.attachShader(this.programInfo.program, fragmentShader);
-        this.gl.linkProgram(this.programInfo.program);
-        if (!this.gl.getProgramParameter(this.programInfo.program, this.gl.LINK_STATUS)) {
-            alert('Unable to initialize the shader program: ' + this.gl.getProgramInfoLog(this.programInfo.program));
-            return null;
-        }
+        this.programInfo.program = makeProgram(this.gl, this.programInfo.vertexShaderSource, this.programInfo.fragmentShaderSource);
         this.programInfo.attribLocations = {
             vertexPosition: this.gl.getAttribLocation(this.programInfo.program, 'aVertexPosition'),
             vertexNormal: gl.getAttribLocation(this.programInfo.program, 'aVertexNormal')

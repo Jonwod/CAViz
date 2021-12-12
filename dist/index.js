@@ -1,34 +1,20 @@
-import { Renderer } from "../dist/renderer.js";
 import { CellularAutomaton } from "./cellular_automaton.js";
+import { Range } from "./range.js";
 import { Configuration } from "./configuration.js";
 import { transitionRuleFromBaysCoding } from "./bays_coding.js";
-console.log("Have I gone mad?");
+import { createSimulation } from "./ca_simulation.js";
 const nStates = 2;
 const nDimensions = 3;
-const transitionRule = transitionRuleFromBaysCoding(4, 5, 2, 6);
+const transitionRule = transitionRuleFromBaysCoding(nDimensions, new Range(4, 5), new Range(2, 6));
 let testCA = new CellularAutomaton(nStates, nDimensions, transitionRule);
 let config = Configuration.makeRandom(3, 10, 2, 0.34);
-let body = document.getElementsByTagName("body")[0];
-let renderer = new Renderer(500, 400);
-body.appendChild(renderer.getHTML());
-const drawRate = 60.0;
-const caUpdateRate = 5.0;
-let lastDrawStamp, lastCaUpdateStamp;
-function draw(timestamp) {
-    if (lastDrawStamp === undefined)
-        lastDrawStamp = timestamp;
-    if (lastCaUpdateStamp === undefined)
-        lastCaUpdateStamp = timestamp;
-    const timeSinceDraw = timestamp - lastDrawStamp;
-    if ((timeSinceDraw / 1000.0) >= (1.0 / drawRate)) {
-        renderer.render(config);
-        lastDrawStamp = timestamp;
-    }
-    const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
-    if ((timeSinceCaUpdate / 1000.0) >= (1.0 / caUpdateRate)) {
-        config.update(transitionRule);
-        lastCaUpdateStamp = timestamp;
-    }
-    window.requestAnimationFrame(draw);
+let sim;
+{
+    const transitionRule = transitionRuleFromBaysCoding(2, new Range(2, 3), new Range(3, 3));
+    let life2d = new CellularAutomaton(2, 2, transitionRule);
+    let initConfig = Configuration.makeRandom(2, 512, 2, 0.4);
+    sim = createSimulation(life2d, initConfig);
 }
-window.requestAnimationFrame(draw);
+let body = document.getElementsByTagName("body")[0];
+body.appendChild(sim.getHTML());
+sim.run();

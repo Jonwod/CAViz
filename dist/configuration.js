@@ -5,11 +5,9 @@ import * as ExtraMath from "./extra_math.js";
 export class Configuration {
     static makeRandom(dimensions, size, numStates, populationDensity) {
         let c = new Configuration();
-        c.cells = [];
+        c.cells = new Uint8Array(Math.pow(size, dimensions));
         for (let i = 0; i < Math.pow(size, dimensions); ++i) {
-            c.cells.push(Math.random() < populationDensity ?
-                Math.floor(Math.random() * numStates)
-                : 0);
+            c.cells[i] = (Math.random() < populationDensity ? Math.floor(Math.random() * numStates) : 0);
         }
         c.size = size;
         c.dimensions = dimensions;
@@ -31,7 +29,7 @@ export class Configuration {
     update(transitionRule) {
         assert(transitionRule.getNumDimensions() === this.dimensions, "Transition rule dimensions doesn't match configuration");
         if (typeof (this.buffer) === 'undefined') {
-            this.buffer = new Array(this.cells.length);
+            this.buffer = new Uint8Array(this.cells.length);
         }
         let dimensionRanges = [];
         for (let d = 0; d < this.dimensions; ++d) {
@@ -55,5 +53,8 @@ export class Configuration {
     }
     print1D() {
         console.log(this.cells);
+    }
+    getData() {
+        return this.cells;
     }
 }

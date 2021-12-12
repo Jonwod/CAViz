@@ -11,4 +11,13 @@ export class CellularAutomaton {
     makeRandomConfiguration(size, populationDensity) {
         return Configuration.makeRandom(this.numDimensions, size, this.numStates, populationDensity);
     }
+    getNumStates() {
+        return this.numStates;
+    }
+    getNumDimensions() {
+        return this.numDimensions;
+    }
+    getTransitionRule() {
+        return this.transitionRule;
+    }
 }
