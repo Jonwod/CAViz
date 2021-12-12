@@ -190,10 +190,35 @@ class CASimulation2D extends CASimulation {
                 out uvec4 fragColor;
 
                 void main() {
+                    ivec2 texSize = textureSize(uReadBuffer, 0);
+                    ivec2 iTexCoords = ivec2( 
+                        float(texSize.x) * vTexCoord.x,
+                        float(texSize.y) * vTexCoord.y
+                    );
+                    ivec2 offsets[8] = ivec2[8](
+                        ivec2(-1, 1), ivec2(0, 1), ivec2(1, 1),
+                        ivec2(-1, 0),              ivec2(1, 0),
+                        ivec2(-1, -1),ivec2(0, -1),ivec2(1, -1)
+                    );
+
+                    uint n = 0u;
+                    // NOTE the literal loop limit. Not sure if can use variable
+                    for(int i = 0; i < 8; ++i) {
+                        n += texelFetch(uReadBuffer, iTexCoords + offsets[i], 0).a;
+                    }
+
+                    ivec2 iCellCoords = ivec2(vTexCoord);
                     uint x = texture(uReadBuffer, vTexCoord).a;
-                    // Flip each pixel (testing)
-                    uint newValue = x == 0u ?  1u : 0u;
-                    fragColor = uvec4(0, 0, 0, newValue);
+
+                    uint newState = x;
+                    if(x == 1u  &&  (n < 2u || n > 3u)) {
+                        newState = 0u;
+                    }
+                    else if(x == 0u  &&  n == 3u) {
+                        newState = 1u;
+                    }
+
+                    fragColor = uvec4(0, 0, 0, newState);
                 }
             `
         }
