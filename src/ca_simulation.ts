@@ -24,7 +24,7 @@ export function createSimulation(ca: CellularAutomaton,
 export abstract class CASimulation {
     private rootElement: HTMLElement;
     private canvas: HTMLCanvasElement;
-    protected gl: WebGLRenderingContext;
+    protected gl: WebGL2RenderingContext;
 
     constructor(ca: CellularAutomaton, initialConfiguration: Configuration, width: number, height: number) {
         let div = document.createElement("div");
@@ -79,9 +79,9 @@ class CASimulation2D extends CASimulation {
 
         {
             const level = 0;
-            const internalFormat = gl.RGBA;
+            const internalFormat = gl.RGBA8UI;
             const border = 0;
-            const format = gl.RGBA;
+            const format = gl.RGBA_INTEGER;
             const type = gl.UNSIGNED_BYTE;
             const initConf = initialConfiguration.getData();
 
@@ -99,8 +99,8 @@ class CASimulation2D extends CASimulation {
                 worldSize, worldSize, border,
                 format, type, data);
 
-            // set the filtering so we don't need mips
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
@@ -110,8 +110,8 @@ class CASimulation2D extends CASimulation {
                 worldSize, worldSize, border,
                 format, type, null);
 
-            // set the filtering so we don't need mips
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
@@ -130,28 +130,32 @@ class CASimulation2D extends CASimulation {
             program: null,
             attribLocations: null,
             uniformLocations: null,
-            vertexShaderSource: `
-                attribute vec4 aVertexPosition;
-                attribute vec2 aTexCoord;
-                varying vec2 vTexCoord;
+            vertexShaderSource: `#version 300 es
+                // ~~~ Render Vertex Shader ~~~
+                in vec4 aVertexPosition;
+                in vec2 aTexCoord;
+                out vec2 vTexCoord;
             
                 void main() {
                     gl_Position = aVertexPosition;
                     vTexCoord = aTexCoord;
                 }
             `,
-            fragmentShaderSource: `
+            fragmentShaderSource: `#version 300 es
+                // ~~~ Render Fragment Shader ~~~
                 precision mediump float;
 
                 // Passed in from the vertex shader.
-                varying vec2 vTexCoord;
+                in vec2 vTexCoord;
 
                 // The texture.
                 uniform sampler2D uReadBuffer;
 
+                out vec4 fragColor;
+
                 void main() {
-                    float x = texture2D(uReadBuffer, vTexCoord).a * 255.0;
-                    gl_FragColor = vec4(x, x, x, 1);
+                    float x = texture(uReadBuffer, vTexCoord).a;
+                    fragColor = vec4(x, x, x, 1);
                 }
             `,
         };
@@ -160,30 +164,34 @@ class CASimulation2D extends CASimulation {
             program: null,
             attribLocations: null,
             uniformLocations: null,
-            vertexShaderSource: `
-                attribute vec4 aVertexPosition;
-                attribute vec2 aTexCoord;
-                varying vec2 vTexCoord;
+            vertexShaderSource: `#version 300 es
+                // ~~~ Compute Vertex Shader ~~~
+                in vec4 aVertexPosition;
+                in vec2 aTexCoord;
+                out vec2 vTexCoord;
             
                 void main() {
                     gl_Position = aVertexPosition;
                     vTexCoord = aTexCoord;
                 }
             `,
-            fragmentShaderSource: `
+            fragmentShaderSource: `#version 300 es
+                // ~~~ Compute Fragment Shader ~~~
                 precision mediump float;
-
+                precision lowp usampler2D;
                 // Passed in from the vertex shader.
-                varying vec2 vTexCoord;
+                in vec2 vTexCoord;
 
                 // The texture.
-                uniform sampler2D uReadBuffer;
+                uniform usampler2D uReadBuffer;
+
+                out uvec4 fragColor;
 
                 void main() {
-                    float x = texture2D(uReadBuffer, vTexCoord).a;
+                    uint x = texture(uReadBuffer, vTexCoord).a;
                     // Flip each pixel (testing)
-                    gl_FragColor = vec4(0, 0, 0, x == 0.0 ?  1.0 : 0.0);
-                    // gl_FragColor = vec4(0, 0, 0, 0.55/255.0);
+                    uint newValue = x == 0u ?  1u : 0u;
+                    fragColor = uvec4(0, 0, 0, newValue);
                 }
             `
         }
