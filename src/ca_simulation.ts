@@ -69,10 +69,10 @@ class CASimulation2D extends CASimulation {
     constructor(ca: CellularAutomaton, initialConfiguration: Configuration) {
         // Used https://webglfundamentals.org/webgl/lessons/webgl-render-to-texture.html
         // for reference on frame buffers and rendering to a texture.
-        super(ca, initialConfiguration, 800, 800);
+        super(ca, initialConfiguration, 1024, 1024);
         const gl = this.gl;
 
-        const worldSize = 512;
+        const worldSize = 1024;
         this.worldSize = worldSize;
         this.readBuffer = gl.createTexture();
         this.writeBuffer = gl.createTexture();
