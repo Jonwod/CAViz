@@ -204,7 +204,10 @@ class CASimulation2D extends CASimulation {
                     uint n = 0u;
                     // NOTE the literal loop limit. Not sure if can use variable
                     for(int i = 0; i < 8; ++i) {
-                        n += texelFetch(uReadBuffer, iTexCoords + offsets[i], 0).a;
+                        ivec2 nCoords = iTexCoords + offsets[i];
+                        nCoords.x -= texSize.x * (nCoords.x / texSize.x);
+                        nCoords.y -= texSize.y * (nCoords.y / texSize.y);
+                        n += texelFetch(uReadBuffer, nCoords, 0).a;
                     }
 
                     ivec2 iCellCoords = ivec2(vTexCoord);
@@ -341,7 +344,7 @@ class CASimulation2D extends CASimulation {
     public run(): void {
         // hz
         const drawRate = 60.0;
-        const caUpdateRate = 5.0;
+        const caUpdateRate = 60.0;
         let lastDrawStamp, lastCaUpdateStamp;
         let that = this;
 
