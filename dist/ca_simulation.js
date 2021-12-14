@@ -36,9 +36,9 @@ export class CASimulation {
 }
 class CASimulation2D extends CASimulation {
     constructor(ca, initialConfiguration) {
-        super(ca, initialConfiguration, 1024, 1024);
+        super(ca, initialConfiguration, initialConfiguration.getSize(), initialConfiguration.getSize());
         const gl = this.gl;
-        const worldSize = 1024;
+        const worldSize = initialConfiguration.getSize();
         this.worldSize = worldSize;
         this.readBuffer = gl.createTexture();
         this.writeBuffer = gl.createTexture();

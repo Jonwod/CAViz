@@ -12,7 +12,7 @@ let sim;
 {
     const transitionRule = transitionRuleFromBaysCoding(2, new Range(2, 3), new Range(3, 3));
     let life2d = new CellularAutomaton(2, 2, transitionRule);
-    let initConfig = Configuration.makeRandom(2, 1024, 2, 0.4);
+    let initConfig = Configuration.makeRandom(2, 4096, 2, 0.4);
     sim = createSimulation(life2d, initConfig);
 }
 let body = document.getElementsByTagName("body")[0];
