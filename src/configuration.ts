@@ -2,7 +2,7 @@ import { assert } from "./assert.js";
 import { nDimensionalIterate } from "./n_dimensional_iterate.js";
 import { TransitionRule } from "./transition_rule.js";
 import { Range } from "./range.js";
-import * as ExtraMath from "./extra_math.js";
+import * as ExtraMath from "./generic/math/extra_math.js";
 
 export class Configuration {
     static makeRandom(dimensions: number, size: number, numStates: number, populationDensity: number): Configuration {

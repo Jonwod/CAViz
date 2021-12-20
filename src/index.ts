@@ -38,6 +38,10 @@ let body = <HTMLBodyElement>document.getElementsByTagName("body")[0];
 body.appendChild(sim.getHTML());
 sim.run();
 
+export function newCA() {
+
+}
+
 // let renderer = new Renderer(500, 400);
 // body.appendChild(renderer.getHTML());
 

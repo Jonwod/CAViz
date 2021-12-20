@@ -1,6 +1,6 @@
 declare var mat4: any;
 import * as keyboard from './keyboard.js';
-import {Vec3} from './vec3.js';
+import {Vec3} from './generic/math/vec3.js';
 
 export class Camera {
     private fov: number;

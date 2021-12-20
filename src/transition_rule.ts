@@ -1,6 +1,6 @@
 import { assert } from "./assert.js";
 import {Configuration} from "./configuration.js";
-import {vecAdd} from "./vector_math.js";
+import {vecAdd} from "./generic/math/array_vector_math.js";
 import {Range} from "./range";
 
 export class Neigbourhood {
