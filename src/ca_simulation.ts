@@ -25,8 +25,12 @@ export abstract class CASimulation {
     private rootElement: HTMLElement;
     private canvas: HTMLCanvasElement;
     protected gl: WebGL2RenderingContext;
+    protected worldSize: number;
 
     constructor(ca: CellularAutomaton, initialConfiguration: Configuration, width: number, height: number) {
+        const worldSize = initialConfiguration.getSize();
+        this.worldSize = worldSize;
+        
         let div = document.createElement("div");
         this.canvas = document.createElement("canvas");
         this.canvas.width = width;
@@ -63,8 +67,6 @@ export abstract class CASimulation {
      */
     public abstract run(): void;
 }
-
-
 class CASimulation2D extends CASimulation {
     constructor(ca: CellularAutomaton, initialConfiguration: Configuration) {
         // Used https://webglfundamentals.org/webgl/lessons/webgl-render-to-texture.html
@@ -72,10 +74,10 @@ class CASimulation2D extends CASimulation {
         super(ca, initialConfiguration, initialConfiguration.getSize(), initialConfiguration.getSize());
         const gl = this.gl;
 
-        const worldSize = initialConfiguration.getSize();
-        this.worldSize = worldSize;
         this.readBuffer = gl.createTexture();
         this.writeBuffer = gl.createTexture();
+
+        const worldSize = this.worldSize;
 
         {
             const level = 0;
@@ -202,8 +204,7 @@ class CASimulation2D extends CASimulation {
                     );
 
                     uint n = 0u;
-                    // NOTE the literal loop limit. Not sure if can use variable
-                    for(int i = 0; i < 8; ++i) {
+                    for(int i = 0; i < offsets.length(); ++i) {
                         ivec2 nCoords = iTexCoords + offsets[i];
                         nCoords.x -= texSize.x * (nCoords.x / texSize.x);
                         nCoords.y -= texSize.y * (nCoords.y / texSize.y);
@@ -424,7 +425,6 @@ class CASimulation2D extends CASimulation {
     private writeBuffer: WebGLTexture;
     private readBuffer: WebGLTexture;
 
-    private worldSize: number;
     private frameBuffer: WebGLFramebuffer;
     private renderProgramInfo: {
         program: WebGLProgram;
