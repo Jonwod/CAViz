@@ -5,7 +5,8 @@ import { Range } from "./range.js";
 import { Configuration } from "./configuration.js";
 import {nDimensionalIterate} from "./n_dimensional_iterate.js";
 import { transitionRuleFromBaysCoding } from "./bays_coding.js";
-import { createSimulation, CASimulation } from "./ca_simulation.js";
+import { CASimulation } from "./ca_simulation.js";
+import { createSimulation } from "./create_simulation.js";
 import { State, StateMachine } from "./generic/state_machine.js";
 
 let appStateMachine: StateMachine;
@@ -81,50 +82,3 @@ class SimState extends State {
 }
 
 appStateMachine = new StateMachine(new SimState(false));
-
-// ====== Constructing a test CA  ======
-
-
-// config.print1D();
-// config.print1D();
-// NEXT STEP: apply update to configuration
-// Then: rendering
-// ====================================
-
-
-
-export function newCA() {
-
-}
-
-// let renderer = new Renderer(500, 400);
-// body.appendChild(renderer.getHTML());
-
-// // hz
-// const drawRate = 60.0;
-// const caUpdateRate = 5.0;
-// let lastDrawStamp, lastCaUpdateStamp;
-
-// function draw(timestamp) {
-//     if (lastDrawStamp === undefined)
-//         lastDrawStamp = timestamp;
-//     if(lastCaUpdateStamp === undefined)
-//         lastCaUpdateStamp = timestamp;
-//     const timeSinceDraw = timestamp - lastDrawStamp;
-
-//     if ( (timeSinceDraw/1000.0) >= (1.0/drawRate) ) {        
-//         // Do the rendering here
-//         renderer.render(config);
-//         lastDrawStamp = timestamp;
-//     }
-
-//     const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
-//     if( (timeSinceCaUpdate/1000.0) >= (1.0/caUpdateRate) ) {
-//         config.update(transitionRule);
-//         lastCaUpdateStamp = timestamp;
-//     }
-
-//     window.requestAnimationFrame(draw);
-// }
-
-// window.requestAnimationFrame(draw);
