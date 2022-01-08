@@ -148,7 +148,7 @@ export class CASimulation3D extends CASimulation {
                     int plane = i / planeSize;
                     int planeRemainder = myMod(i, planeSize);
                     int row = planeRemainder / uWorldSize;
-                    int rowRemainder = myMod(row, uWorldSize);
+                    int rowRemainder = myMod(planeRemainder, uWorldSize);
                     return ivec3(plane, row, rowRemainder);
                 }
 
@@ -159,7 +159,7 @@ export class CASimulation3D extends CASimulation {
                 ivec2 toTextureCoords(ivec3 worldCoords) {
                     int index = toIndex(worldCoords);
                     int row = index / textureSize(uReadBuffer, 0).x;
-                    int rowRemainder = myMod(row, uWorldSize);
+                    int rowRemainder = myMod(index, textureSize(uReadBuffer, 0).x);
                     return ivec2(row, rowRemainder);
                 }
 
@@ -196,13 +196,23 @@ export class CASimulation3D extends CASimulation {
 
                     uint x = getCellState(i3DCoords);
                     uint newState = x;
-                    if(x == 1u  &&  (n < 2u || n > 3u)) {
-                        newState = 0u;
-                    }
-                    else if(x == 0u  &&  n == 3u) {
+                    
+                    // if(x == 0u) {
+                    //     newState = 1u;
+                    // } else if(x == 1u) {
+                    //     newState = 0u;
+                    // }
+
+                    // (keepalive-reproduce)
+                    // Bays' (5766) rule for 3D Life
+                    // Testing (4526) rule for unbounded growth
+                    if(x == 1u  && (n < 4u || n > 5u)) {
+                        // newState = 0u;
+                    } else if(x == 0u  &&  n >= 1u &&  n <= 6u) {
                         newState = 1u;
                     }
 
+                    //newState = 1u;
                     fragColor = uvec4(0, 0, 0, newState);
                 }
             `
@@ -327,7 +337,7 @@ export class CASimulation3D extends CASimulation {
     public run(): void {
         // hz
         const drawRate = 60.0;
-        const caUpdateRate = 60.0;
+        const caUpdateRate = 1.0;
         let lastDrawStamp, lastCaUpdateStamp;
         let that = this;
 
