@@ -177,9 +177,9 @@ export class CASimulation3D extends CASimulation {
                     ivec3 i3DCoords = to3DCoords(coord1D);
 
                     uint n = 0u;
-                    for(int dx = 0; dx < uWorldSize; ++dx) {
-                        for(int dy = 0; dy < uWorldSize; ++dy) {
-                            for(int dz = 0; dz < uWorldSize; ++dz) {
+                    for(int dx = -1; dx < 2; ++dx) {
+                        for(int dy = -1; dy < 2; ++dy) {
+                            for(int dz = -1; dz < 2; ++dz) {
                                 if(dx == 0  &&  dy == 0  &&  dz == 0) {
                                     continue;
                                 }
@@ -207,8 +207,8 @@ export class CASimulation3D extends CASimulation {
                     // Bays' (5766) rule for 3D Life
                     // Testing (4526) rule for unbounded growth
                     if(x == 1u  && (n < 4u || n > 5u)) {
-                        // newState = 0u;
-                    } else if(x == 0u  &&  n >= 1u &&  n <= 6u) {
+                        newState = 0u;
+                    } else if(x == 0u &&  n >= 2u &&  n <= 6u) {
                         newState = 1u;
                     }
 
