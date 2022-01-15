@@ -20,7 +20,7 @@ export abstract class CASimulation {
         this.canvas = document.createElement("canvas");
         this.canvas.width = width;
         this.canvas.height = height;
-        this.gl = this.canvas.getContext("webgl2"); // NOTE WebGL 2. Make sure this works.
+        this.gl = this.canvas.getContext("webgl2");
         if(this.gl === null) {
             alert("Unable to initialize WebGL. Your browser or machine may not support it.");
             return null;

@@ -3,6 +3,9 @@ import { CASimulation } from "./ca_simulation.js";
 import { CellularAutomaton } from "./cellular_automaton.js";
 import { Configuration } from "./configuration.js";
 import { makeProgram } from "./gl_helpers.js";
+import { VoxelMesh } from "./voxel_mesh.js";
+import { Camera } from "./camera.js";
+declare var mat4: any;
 
 export class CASimulation3D extends CASimulation {
     constructor(ca: CellularAutomaton, initialConfiguration: Configuration) {
@@ -20,9 +23,8 @@ export class CASimulation3D extends CASimulation {
         console.log(`${numCells} cells`);
         const textureSize = Math.ceil(Math.sqrt(numCells));
 
-        // For debugging purposes, will draw the data texture flat
-        this.canvas.width = textureSize;
-        this.canvas.height= textureSize;
+        this.canvas.width = 800;
+        this.canvas.height= 800;
 
         {
             const level = 0;
@@ -156,12 +158,18 @@ export class CASimulation3D extends CASimulation {
                     return coords.x * uWorldSize * uWorldSize + coords.y * uWorldSize + coords.z;
                 }
 
-                ivec2 toTextureCoords(ivec3 worldCoords) {
-                    int index = toIndex(worldCoords);
+                ivec2 toTextureCoords(int index) {
                     int row = index / textureSize(uReadBuffer, 0).x;
                     int rowRemainder = myMod(index, textureSize(uReadBuffer, 0).x);
                     return ivec2(row, rowRemainder);
                 }
+
+
+                ivec2 toTextureCoords(ivec3 worldCoords) {
+                    int index = toIndex(worldCoords);
+                    return toTextureCoords(index);
+                }
+
 
                 uint getCellState(ivec3 coords) {
                     return texelFetch(uReadBuffer, toTextureCoords(coords), 0).a;
@@ -320,6 +328,14 @@ export class CASimulation3D extends CASimulation {
             gl.enableVertexAttribArray(this.renderProgramInfo.attribLocations.texCoord);
         }
         // ============================================
+    
+        this.voxelMesh = new VoxelMesh(this.gl, worldSize);
+
+        const fieldOfView = 45 * Math.PI / 180;   // in radians
+        const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
+        const zNear = 0.1;
+        const zFar = 1000.0;
+        this.camera = new Camera( this.canvas, fieldOfView, aspect, zNear, zFar);
     }
 
     private swapBuffers() {
@@ -356,7 +372,8 @@ export class CASimulation3D extends CASimulation {
 
             const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
             if( (timeSinceCaUpdate/1000.0) >= (1.0/caUpdateRate) ) {
-                that.update();
+                // DEBUG
+                // that.update();
                 lastCaUpdateStamp = timestamp;
             }
 
@@ -369,29 +386,48 @@ export class CASimulation3D extends CASimulation {
     private render() {
         const gl = this.gl;
 
-        // This makes sure we are rendering to the canvas, not framebuffer
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.viewport(0, 0, this.getCanvasWidth(), this.getCanvasHeight());
-      
-        // Clear the canvas before we start drawing on it.
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        gl.useProgram(this.renderProgramInfo.program);
-
-        // Bind the world texture so as to draw it on the quad
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
-        gl.uniform1i(this.renderProgramInfo.uniformLocations.uReadBuffer, 0);
-
-        gl.clearColor(0.5,0.5,0.5,1);
-        gl.clear(this.gl.COLOR_BUFFER_BIT);
-
         gl.clearDepth(1.0);                 // Clear everything
         gl.enable(gl.DEPTH_TEST);           // Enable depth testing
         gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
 
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
-        gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
+        // // This makes sure we are rendering to the canvas, not framebuffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, this.getCanvasWidth(), this.getCanvasHeight());
+      
+        // // Clear the canvas before we start drawing on it.
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // gl.useProgram(this.renderProgramInfo.program);
+
+        // // Bind the world texture so as to draw it on the quad
+        // gl.activeTexture(gl.TEXTURE0);
+        // gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
+        // gl.uniform1i(this.renderProgramInfo.uniformLocations.uReadBuffer, 0);
+
+        // gl.clearColor(0.5,0.5,0.5,1);
+        // gl.clear(this.gl.COLOR_BUFFER_BIT);
+
+        // gl.clearDepth(1.0);                 // Clear everything
+        // gl.enable(gl.DEPTH_TEST);           // Enable depth testing
+        // gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
+
+        // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
+        // gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
+
+        const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
+
+        // Allow for change in aspect ratio
+        this.camera.setAspectRatio(aspect);
+        this.camera.processInput();
+
+        const modelViewMatrix = mat4.create();
+        const xRender = 0; // - configuration.getSize() / 2;
+        const yRender = 0; // - configuration.getSize() / 2;
+        const zRender = 0; // - configuration.getSize() / 2;
+        mat4.translate(modelViewMatrix,     // destination matrix
+                        modelViewMatrix,     // matrix to translate
+                        [xRender, yRender, zRender]);  // amount to translate
+        this.voxelMesh.render(modelViewMatrix, this.camera.getPerspectiveMatrix());
     }
 
     /**
@@ -455,4 +491,7 @@ export class CASimulation3D extends CASimulation {
         vertexShaderSource: String;
         fragmentShaderSource: String;
     };
+
+    private voxelMesh: VoxelMesh;
+    private camera: Camera;
 }

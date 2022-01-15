@@ -8,6 +8,8 @@ import { transitionRuleFromBaysCoding } from "./bays_coding.js";
 import { CASimulation } from "./ca_simulation.js";
 import { createSimulation } from "./create_simulation.js";
 import { State, StateMachine } from "./generic/state_machine.js";
+import {MeshTemplate} from "./mesh_template.js";
+declare var mat4: any;
 
 let appStateMachine: StateMachine;
 
@@ -81,4 +83,23 @@ class SimState extends State {
     private threeD: boolean;
 }
 
-appStateMachine = new StateMachine(new SimState(false));
+class TestInstancedRender extends State {
+    onEnter(): void {
+        let renderer = new Renderer(800, 800);
+        document.getElementsByTagName("body")[0].appendChild(renderer.getHTML());
+
+        let config = Configuration.makeRandom(3, 10, 2, 0.3);
+
+        function tick(timestamp) {
+            renderer.render(config);
+            window.requestAnimationFrame(tick);
+        }
+
+        window.requestAnimationFrame(tick);
+    }
+    onExit(): void {
+    }
+}
+
+
+appStateMachine = new StateMachine(new SimState(true));
