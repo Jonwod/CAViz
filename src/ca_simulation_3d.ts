@@ -36,13 +36,20 @@ export class CASimulation3D extends CASimulation {
 
 
             // Init readbuffer to initial CA configuration
-            let data = new Uint8Array(initConf.length * 4);
+            let data = new Uint8Array(textureSize * textureSize * 4);
             for(let i = 0, j = 0; i < initConf.length; ++i) {
                 // This is silly
                 data[j++] = initConf[i];
                 data[j++] = initConf[i];
                 data[j++] = initConf[i];
                 data[j++] = initConf[i];
+            }
+
+            for(let i = initConf.length, j = initConf.length * 4; i < textureSize * textureSize; ++i) {
+                data[j++] = 0;
+                data[j++] = 0;
+                data[j++] = 0;
+                data[j++] = 0; 
             }
 
             gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
