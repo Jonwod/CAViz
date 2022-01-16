@@ -383,8 +383,7 @@ export class CASimulation3D extends CASimulation {
 
             const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
             if( (timeSinceCaUpdate/1000.0) >= (1.0/caUpdateRate) ) {
-                // DEBUG
-                // that.update();
+                that.update();
                 lastCaUpdateStamp = timestamp;
             }
 
