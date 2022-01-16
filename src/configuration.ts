@@ -10,7 +10,7 @@ export class Configuration {
         c.cells = new Uint8Array(Math.pow(size, dimensions));
         for(let i = 0; i < Math.pow(size, dimensions); ++i) {
             // TODO: This would be better as a probability distribution over the states
-            c.cells[i] = (Math.random() < populationDensity ? Math.floor(Math.random() * numStates) : 0);
+            c.cells[i] = (Math.random() < populationDensity ? (Math.floor(Math.random() * (numStates - 1)) + 1) : 0);
         }
         c.size = size;
         c.dimensions = dimensions;
