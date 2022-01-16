@@ -88,8 +88,13 @@ export class VoxelMesh {
 
                 void main() {
                     ivec3 voxelCoords = to3DCoords(gl_InstanceID);
-                    vec3 voxelOffset = vec3(voxelCoords) * 1.5;
-                    gl_Position = uPerspectiveMatrix * uModelViewMatrix * (aVertexPosition + vec4(voxelOffset, 1));
+                    float spacing = 1.5;
+                    float gridOffset = -(spacing * float(uWorldSize)) / 2.0;
+                    vec3 voxelOffset = vec3(voxelCoords) * spacing;
+                    gl_Position = uPerspectiveMatrix * uModelViewMatrix * (
+                        aVertexPosition + vec4(voxelOffset, 1) + 
+                        vec4(gridOffset, gridOffset, gridOffset, 1)
+                    );
                     highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
                     highp vec3 directionalLightColor = vec3(1, 1, 1);
                     highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
