@@ -47,7 +47,7 @@ export class CASimulation3D extends CASimulation {
 
             gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                worldSize, worldSize, border,
+                textureSize, textureSize, border,
                 format, type, data);
 
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -171,9 +171,13 @@ export class CASimulation3D extends CASimulation {
                 }
 
 
-                uint getCellState(ivec3 coords) {
-                    return texelFetch(uReadBuffer, toTextureCoords(coords), 0).a;
+                uint getCellState(int index) {
+                    return texelFetch(uReadBuffer, toTextureCoords(index), 0).a;
                 }
+                uint getCellState(ivec3 coords) {
+                    return getCellState(toIndex(coords));
+                }
+
 
                 void main() {
                     ivec2 texSize = textureSize(uReadBuffer, 0);
@@ -329,7 +333,7 @@ export class CASimulation3D extends CASimulation {
         }
         // ============================================
     
-        this.voxelMesh = new VoxelMesh(this.gl, worldSize);
+        this.voxelMesh = new VoxelMesh(this.gl, worldSize, 1.0, 1.2);
 
         const fieldOfView = 45 * Math.PI / 180;   // in radians
         const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
@@ -365,8 +369,8 @@ export class CASimulation3D extends CASimulation {
             const timeSinceDraw = timestamp - lastDrawStamp;
 
             if ( (timeSinceDraw/1000.0) >= (1.0/drawRate) ) {        
-                // Do the rendering here
                 that.render();
+                // that.renderFlat();
                 lastDrawStamp = timestamp;
             }
 
@@ -382,7 +386,6 @@ export class CASimulation3D extends CASimulation {
         window.requestAnimationFrame(tick);
     }
 
-    // Not clear at this point if this will have to be smooshed up with update()
     private render() {
         const gl = this.gl;
 
@@ -427,7 +430,38 @@ export class CASimulation3D extends CASimulation {
         mat4.translate(modelViewMatrix,     // destination matrix
                         modelViewMatrix,     // matrix to translate
                         [xRender, yRender, zRender]);  // amount to translate
-        this.voxelMesh.render(modelViewMatrix, this.camera.getPerspectiveMatrix());
+        this.voxelMesh.render(modelViewMatrix, this.camera.getPerspectiveMatrix(), this.readBuffer);
+    }
+
+    private renderFlat() {
+        const gl = this.gl;
+
+        gl.clearDepth(1.0);                 // Clear everything
+        gl.enable(gl.DEPTH_TEST);           // Enable depth testing
+        gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
+
+         // This makes sure we are rendering to the canvas, not framebuffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, this.getCanvasWidth(), this.getCanvasHeight());
+        
+        // // Clear the canvas before we start drawing on it.
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.useProgram(this.renderProgramInfo.program);
+
+        // Bind the world texture so as to draw it on the quad
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
+        gl.uniform1i(this.renderProgramInfo.uniformLocations.uReadBuffer, 0);
+
+        gl.clearColor(0.5,0.5,0.5,1);
+        gl.clear(this.gl.COLOR_BUFFER_BIT);
+
+        gl.clearDepth(1.0);                 // Clear everything
+        gl.enable(gl.DEPTH_TEST);           // Enable depth testing
+        gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
+        gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
     }
 
     /**

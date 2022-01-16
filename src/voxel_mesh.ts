@@ -24,6 +24,8 @@ export class VoxelMesh {
             modelViewMatrix: WebGLUniformLocation;
             normalMatrix:WebGLUniformLocation;
             gridSize: WebGLUniformLocation;
+            spacing: WebGLUniformLocation;
+            readBuffer: WebGLUniformLocation;
         },
         vertexShaderSource: String;
         fragmentShaderSource: String;
@@ -31,16 +33,20 @@ export class VoxelMesh {
 
     private gl: WebGL2RenderingContext;
     private gridSize: number;
+    private voxelSize: number;
+    private gridSpacing: number;
 
-    constructor(gl: WebGL2RenderingContext, gridSize: number) {
+    constructor(gl: WebGL2RenderingContext, gridSize: number, voxelSize: number, gridSpacing: number) {
+        this.gridSize = gridSize;
+        this.voxelSize = voxelSize;
+        this.gridSpacing = gridSpacing;
+        this.gl = gl;
+
         let buffers = this.initBuffers();
         let positions = buffers.positions;
         let indices = buffers.indices;
         let normals = buffers.normals;
 
-        this.gridSize = gridSize;
-
-        this.gl = gl;
         // ~~~~~~~~~~ Program ~~~~~~~~~~~
         this.programInfo = {
             program: null,
@@ -49,7 +55,7 @@ export class VoxelMesh {
             vertexShaderSource: `#version 300 es
             // ---- VOXEL MESH VERTEX SHADER ----
                 precision lowp usampler2D;
-                in vec4 aVertexPosition;
+                in vec3 aVertexPosition;
                 in vec3 aVertexNormal;
 
                 uniform mat4 uModelViewMatrix;
@@ -57,6 +63,8 @@ export class VoxelMesh {
                 uniform mat4 uNormalMatrix;
 
                 uniform int uWorldSize;
+
+                uniform float uSpacing;
 
                 out highp vec3 vLighting;
 
@@ -80,27 +88,44 @@ export class VoxelMesh {
                     return coords.x * uWorldSize * uWorldSize + coords.y * uWorldSize + coords.z;
                 }
 
-                // ivec2 toTextureCoords(int index) {
-                //     int row = index / textureSize(uReadBuffer, 0).x;
-                //     int rowRemainder = myMod(index, textureSize(uReadBuffer, 0).x);
-                //     return ivec2(row, rowRemainder);
-                // }
+                ivec2 toTextureCoords(int index) {
+                    int row = index / textureSize(uReadBuffer, 0).x;
+                    int rowRemainder = myMod(index, textureSize(uReadBuffer, 0).x);
+                    return ivec2(row, rowRemainder);
+                }
+
+                uint getCellState(int index) {
+                    return texelFetch(uReadBuffer, toTextureCoords(index), 0).a;
+                }
+                uint getCellState(ivec3 coords) {
+                    return getCellState(toIndex(coords));
+                }
 
                 void main() {
-                    ivec3 voxelCoords = to3DCoords(gl_InstanceID);
-                    float spacing = 1.5;
-                    float gridOffset = -(spacing * float(uWorldSize)) / 2.0;
-                    vec3 voxelOffset = vec3(voxelCoords) * spacing;
-                    gl_Position = uPerspectiveMatrix * uModelViewMatrix * (
-                        aVertexPosition + vec4(voxelOffset, 1) + 
-                        vec4(gridOffset, gridOffset, gridOffset, 1)
-                    );
-                    highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
-                    highp vec3 directionalLightColor = vec3(1, 1, 1);
-                    highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
-                    highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
-                    highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
-                    vLighting = ambientLight + (directionalLightColor * directional);
+                    uint cellState = getCellState(gl_InstanceID);
+
+                    // This is the bit that will want to change if we are doing colours instead or whatever
+                    if(cellState == 0u) {
+                        // Vertex outside of NDC area to render it invisible
+                        gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+                    }
+                    else {
+                        ivec3 voxelCoords = to3DCoords(gl_InstanceID);
+                        float gridOffset = -(uSpacing * float(uWorldSize)) / 2.0;
+                        vec3 voxelOffset = vec3(voxelCoords) * uSpacing;
+                        gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(
+                            aVertexPosition + voxelOffset + 
+                            vec3(gridOffset, gridOffset, gridOffset)
+                            , 1
+                        );
+                        highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
+                        highp vec3 directionalLightColor = vec3(1, 1, 1);
+                        highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+                        highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
+                        highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
+                        vLighting = ambientLight + (directionalLightColor * directional);
+                    }
+                    //
                 }
            `,
             fragmentShaderSource: `#version 300 es
@@ -126,7 +151,9 @@ export class VoxelMesh {
             perspectiveMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uPerspectiveMatrix'),
             modelViewMatrix: this.gl.getUniformLocation(this.programInfo.program, 'uModelViewMatrix'),
             normalMatrix: gl.getUniformLocation(this.programInfo.program, 'uNormalMatrix'),
-            gridSize: gl.getUniformLocation(this.programInfo.program, 'uWorldSize')
+            gridSize: gl.getUniformLocation(this.programInfo.program, 'uWorldSize'),
+            spacing: gl.getUniformLocation(this.programInfo.program, 'uSpacing'),
+            readBuffer: gl.getUniformLocation(this.programInfo.program, 'uReadBuffer')
         };
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -203,17 +230,20 @@ export class VoxelMesh {
         };
     }
 
-    public render(modelViewMatrix, perspectiveMatrix) {
+    public render(modelViewMatrix, perspectiveMatrix, cellDataTexture: WebGLTexture) {
         const programInfo = this.programInfo;
         const buffers = this.buffers;
         const gl = this.gl;
 
         gl.useProgram(programInfo.program);
+        
 
         const normalMatrix = mat4.create();
         mat4.invert(normalMatrix, modelViewMatrix);
         mat4.transpose(normalMatrix, normalMatrix);
         
+        // mat4.scale(scaledModelMatrix, modelViewMatrix, [this.voxelSize, this.voxelSize, this.voxelSize]);
+
         // Set the shader uniforms
         gl.uniformMatrix4fv(
             programInfo.uniformLocations.perspectiveMatrix,
@@ -232,7 +262,14 @@ export class VoxelMesh {
         gl.uniform1i(
             programInfo.uniformLocations.gridSize, 
             this.gridSize);
+
+        gl.uniform1f(programInfo.uniformLocations.spacing,
+            this.gridSpacing);
         
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, cellDataTexture);
+        gl.uniform1i(this.programInfo.uniformLocations.readBuffer, 0);
+
         {
             const offset = 0;
             // gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
@@ -283,6 +320,10 @@ export class VoxelMesh {
             -0.5,  0.5,  0.5,
             -0.5,  0.5, -0.5,
         ];
+
+        for(let i = 0; i < positions.length; ++i) {
+            positions[i] *= this.voxelSize;
+        }
           
         const indices = [
             0,  1,  2,      0,  2,  3,    // front
