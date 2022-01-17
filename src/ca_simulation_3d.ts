@@ -65,7 +65,7 @@ export class CASimulation3D extends CASimulation {
             // Init writebuffer
             gl.bindTexture(gl.TEXTURE_2D, this.writeBuffer);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                worldSize, worldSize, border,
+                textureSize, textureSize, border,
                 format, type, null);
 
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -405,23 +405,6 @@ export class CASimulation3D extends CASimulation {
       
         // // Clear the canvas before we start drawing on it.
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        // gl.useProgram(this.renderProgramInfo.program);
-
-        // // Bind the world texture so as to draw it on the quad
-        // gl.activeTexture(gl.TEXTURE0);
-        // gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
-        // gl.uniform1i(this.renderProgramInfo.uniformLocations.uReadBuffer, 0);
-
-        // gl.clearColor(0.5,0.5,0.5,1);
-        // gl.clear(this.gl.COLOR_BUFFER_BIT);
-
-        // gl.clearDepth(1.0);                 // Clear everything
-        // gl.enable(gl.DEPTH_TEST);           // Enable depth testing
-        // gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
-
-        // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
-        // gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
 
         const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
 
