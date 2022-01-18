@@ -22,7 +22,7 @@ export class CASimulation3D extends CASimulation {
         const numCells = initialConfiguration.getData().length;
         console.log(`${numCells} cells`);
         const textureSize = Math.ceil(Math.sqrt(numCells));
-
+        this.textureSize = textureSize;
         this.canvas.width = 800;
         this.canvas.height= 800;
 
@@ -216,11 +216,7 @@ export class CASimulation3D extends CASimulation {
                     uint x = getCellState(i3DCoords);
                     uint newState = x;
                     
-                    // if(x == 0u) {
-                    //     newState = 1u;
-                    // } else if(x == 1u) {
-                    //     newState = 0u;
-                    // }
+
 
                     // (keepalive-reproduce)
                     // Bays' (5766) rule for 3D Life
@@ -231,7 +227,15 @@ export class CASimulation3D extends CASimulation {
                         newState = 1u;
                     }
 
-                    //newState = 1u;
+
+                    // if(x == 0u) {
+                    //     newState = 1u;
+                    // } else if(x == 1u) {
+                    //     newState = 0u;
+                    // }
+
+                    newState = 1u;
+
                     fragColor = uvec4(0, 0, 0, newState);
                 }
             `
@@ -459,7 +463,7 @@ export class CASimulation3D extends CASimulation {
     private update() {
         const gl = this.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-        gl.viewport(0, 0, this.worldSize, this.worldSize);
+        gl.viewport(0, 0, this.textureSize, this.textureSize);
         gl.useProgram(this.computeProgramInfo.program);
 
         gl.activeTexture(gl.TEXTURE0);
@@ -470,6 +474,7 @@ export class CASimulation3D extends CASimulation {
         // Drawing quad
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
         this.swapBuffers();
     }
@@ -517,4 +522,6 @@ export class CASimulation3D extends CASimulation {
 
     private voxelMesh: VoxelMesh;
     private camera: Camera;
+
+    private textureSize: number;
 }
