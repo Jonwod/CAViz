@@ -234,7 +234,7 @@ export class CASimulation3D extends CASimulation {
                     //     newState = 0u;
                     // }
 
-                    newState = 1u;
+                    // newState = 1u;
 
                     fragColor = uvec4(0, 0, 0, newState);
                 }
@@ -296,18 +296,16 @@ export class CASimulation3D extends CASimulation {
         this.buffers.position = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.position);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(squareVerts), gl.STATIC_DRAW);
-        gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
         // Tell WebGL how to pull out the positions from the position
         // buffer into the vertexPosition attribute.
         {
-            const numComponents = 3;  // pull out 2 values per iteration
+            const numComponents = 3;
             const type = this.gl.FLOAT;    // the data in the buffer is 32bit floats
             const normalize = false;  // don't normalize
             const stride = 0;         // how many bytes to get from one set of values to the next
                                       // 0 = use type and numComponents above
             const offset = 0;         // how many bytes inside the buffer to start from
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers.position);
             this.gl.vertexAttribPointer(
                 this.renderProgramInfo.attribLocations.vertexPosition,
                 numComponents,
@@ -318,6 +316,7 @@ export class CASimulation3D extends CASimulation {
             this.gl.enableVertexAttribArray(
                 this.renderProgramInfo.attribLocations.vertexPosition);
         }
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 
         // Setup index buffer
         this.buffers.index = gl.createBuffer();
@@ -338,13 +337,13 @@ export class CASimulation3D extends CASimulation {
             const normalize = false; // don't normalize
             const stride = 0; // how many bytes to get from one set to the next
             const offset = 0; // how many bytes inside the buffer to start from
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.uv);
             gl.vertexAttribPointer(this.renderProgramInfo.attribLocations.texCoord, num, type, normalize, stride, offset);
             gl.enableVertexAttribArray(this.renderProgramInfo.attribLocations.texCoord);
         }
         // ============================================
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
     
-        this.voxelMesh = new VoxelMesh(this.gl, worldSize, 1.0, 1.2);
+        // this.voxelMesh = new VoxelMesh(this.gl, worldSize, 1.0, 1.2);
 
         const fieldOfView = 45 * Math.PI / 180;   // in radians
         const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
@@ -380,8 +379,9 @@ export class CASimulation3D extends CASimulation {
             const timeSinceDraw = timestamp - lastDrawStamp;
 
             if ( (timeSinceDraw/1000.0) >= (1.0/drawRate) ) {        
-                that.render();
-                // that.renderFlat();
+                // DEBUG
+                // that.render();
+                that.renderFlat();
                 lastDrawStamp = timestamp;
             }
 
@@ -446,12 +446,8 @@ export class CASimulation3D extends CASimulation {
         gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
         gl.uniform1i(this.renderProgramInfo.uniformLocations.uReadBuffer, 0);
 
-        gl.clearColor(0.5,0.5,0.5,1);
+        gl.clearColor(0.2,0.5,0.5,1);
         gl.clear(this.gl.COLOR_BUFFER_BIT);
-
-        gl.clearDepth(1.0);                 // Clear everything
-        gl.enable(gl.DEPTH_TEST);           // Enable depth testing
-        gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
