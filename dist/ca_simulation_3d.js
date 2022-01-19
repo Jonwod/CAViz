@@ -210,7 +210,7 @@ export class CASimulation3D extends CASimulation {
                     //     newState = 0u;
                     // }
 
-                    newState = 1u;
+                    // newState = 1u;
 
                     fragColor = uvec4(0, 0, 0, newState);
                 }
@@ -271,10 +271,6 @@ export class CASimulation3D extends CASimulation {
             this.gl.enableVertexAttribArray(this.renderProgramInfo.attribLocations.vertexPosition);
         }
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
-        this.buffers.index = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareIndices), gl.STATIC_DRAW);
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
         this.buffers.uv = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.uv);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(squareUVs), gl.STATIC_DRAW);
@@ -287,6 +283,9 @@ export class CASimulation3D extends CASimulation {
             gl.vertexAttribPointer(this.renderProgramInfo.attribLocations.texCoord, num, type, normalize, stride, offset);
             gl.enableVertexAttribArray(this.renderProgramInfo.attribLocations.texCoord);
         }
+        this.buffers.index = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareIndices), gl.STATIC_DRAW);
         gl.bindVertexArray(null);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         this.voxelMesh = new VoxelMesh(this.gl, worldSize, 1.0, 1.2);
@@ -379,7 +378,6 @@ export class CASimulation3D extends CASimulation {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
         const attachmentPoint = gl.COLOR_ATTACHMENT0;
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, 0);
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
         gl.bindVertexArray(this.vao);
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
         gl.bindVertexArray(null);

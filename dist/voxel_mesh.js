@@ -176,7 +176,6 @@ export class VoxelMesh {
         gl.bindVertexArray(this.vao);
         {
             const offset = 0;
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.index);
             const instanceCount = Math.pow(this.gridSize, 3);
             gl.drawElementsInstanced(gl.TRIANGLES, buffers.indexCount, gl.UNSIGNED_SHORT, offset, instanceCount);
         }
