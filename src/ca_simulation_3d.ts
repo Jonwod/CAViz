@@ -26,6 +26,13 @@ export class CASimulation3D extends CASimulation {
         this.canvas.width = 800;
         this.canvas.height= 800;
 
+        let drawModeButton = document.createElement("button");
+        drawModeButton.innerText = "Draw mode";
+        drawModeButton.addEventListener("click", () => {
+            this.drawFlat = !this.drawFlat;
+        });
+        this.rootElement.appendChild(drawModeButton);
+
         {
             const level = 0;
             const internalFormat = gl.RGBA8UI;
@@ -234,7 +241,7 @@ export class CASimulation3D extends CASimulation {
                     //     newState = 0u;
                     // }
 
-                    // newState = 1u;
+                    newState = 1u;
 
                     fragColor = uvec4(0, 0, 0, newState);
                 }
@@ -292,6 +299,9 @@ export class CASimulation3D extends CASimulation {
             uvCount: null
         };
 
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
         // Setup position buffer
         this.buffers.position = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.position);
@@ -341,9 +351,11 @@ export class CASimulation3D extends CASimulation {
             gl.enableVertexAttribArray(this.renderProgramInfo.attribLocations.texCoord);
         }
         // ============================================
+
+        gl.bindVertexArray(null);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
     
-        // this.voxelMesh = new VoxelMesh(this.gl, worldSize, 1.0, 1.2);
+        this.voxelMesh = new VoxelMesh(this.gl, worldSize, 1.0, 1.2);
 
         const fieldOfView = 45 * Math.PI / 180;   // in radians
         const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
@@ -358,10 +370,6 @@ export class CASimulation3D extends CASimulation {
         const temp = this.readBuffer;
         this.readBuffer = this.writeBuffer;
         this.writeBuffer = temp;
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer); 
-        const attachmentPoint = gl.COLOR_ATTACHMENT0;
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, 0);
     }
 
     public run(): void {
@@ -379,9 +387,12 @@ export class CASimulation3D extends CASimulation {
             const timeSinceDraw = timestamp - lastDrawStamp;
 
             if ( (timeSinceDraw/1000.0) >= (1.0/drawRate) ) {        
-                // DEBUG
-                // that.render();
-                that.renderFlat();
+                if(that.drawFlat) {
+                    that.renderFlat();
+                } else {
+                    that.render();
+                }
+
                 lastDrawStamp = timestamp;
             }
 
@@ -446,11 +457,13 @@ export class CASimulation3D extends CASimulation {
         gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
         gl.uniform1i(this.renderProgramInfo.uniformLocations.uReadBuffer, 0);
 
-        gl.clearColor(0.2,0.5,0.5,1);
+        gl.clearColor(0.2,0.0,0.5,1);
         gl.clear(this.gl.COLOR_BUFFER_BIT);
 
+        gl.bindVertexArray(this.vao);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
+        gl.bindVertexArray(null);
     }
 
     /**
@@ -458,7 +471,7 @@ export class CASimulation3D extends CASimulation {
      */
     private update() {
         const gl = this.gl;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+
         gl.viewport(0, 0, this.textureSize, this.textureSize);
         gl.useProgram(this.computeProgramInfo.program);
 
@@ -467,10 +480,15 @@ export class CASimulation3D extends CASimulation {
         gl.uniform1i(this.computeProgramInfo.uniformLocations.uReadBuffer, 0);
         gl.uniform1i(this.computeProgramInfo.uniformLocations.uWorldSize, this.worldSize);
 
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer); 
+        const attachmentPoint = gl.COLOR_ATTACHMENT0;
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, 0);
+
         // Drawing quad
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
+        gl.bindVertexArray(this.vao);
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        gl.bindVertexArray(null);
 
         this.swapBuffers();
     }
@@ -502,6 +520,8 @@ export class CASimulation3D extends CASimulation {
         uvCount: number;
     };
 
+    private vao: WebGLVertexArrayObject;
+
     private computeProgramInfo: {
         program: WebGLProgram;
         attribLocations: {
@@ -520,4 +540,6 @@ export class CASimulation3D extends CASimulation {
     private camera: Camera;
 
     private textureSize: number;
+
+    private drawFlat = false;
 }
