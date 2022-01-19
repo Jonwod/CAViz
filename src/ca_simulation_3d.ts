@@ -241,7 +241,7 @@ export class CASimulation3D extends CASimulation {
                     //     newState = 0u;
                     // }
 
-                    newState = 1u;
+                    // newState = 1u;
 
                     fragColor = uvec4(0, 0, 0, newState);
                 }
