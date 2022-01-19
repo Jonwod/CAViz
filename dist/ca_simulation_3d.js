@@ -303,7 +303,7 @@ export class CASimulation3D extends CASimulation {
     }
     run() {
         const drawRate = 60.0;
-        const caUpdateRate = 1.0;
+        const caUpdateRate = 60.0;
         let lastDrawStamp, lastCaUpdateStamp;
         let that = this;
         function tick(timestamp) {
