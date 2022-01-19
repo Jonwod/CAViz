@@ -17,7 +17,7 @@ export class Camera {
     private pitch = 0.2;
     private x = 0;
     private y = 0;
-    private z = -15;
+    private z = -300;
 
     constructor( canvas: HTMLElement, fieldOfView: number, aspectRatio: number, nearClip: number, farClip: number) {
         this.fov = fieldOfView;
