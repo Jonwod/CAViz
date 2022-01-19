@@ -228,9 +228,9 @@ export class CASimulation3D extends CASimulation {
                     // (keepalive-reproduce)
                     // Bays' (5766) rule for 3D Life
                     // Testing (4526) rule for unbounded growth
-                    if(x == 1u  && (n < 4u || n > 5u)) {
+                    if(x == 1u  && (n < 5u || n > 7u)) {
                         newState = 0u;
-                    } else if(x == 0u &&  n >= 2u &&  n <= 6u) {
+                    } else if(x == 0u &&  n >= 6u &&  n <= 6u) {
                         newState = 1u;
                     }
 
