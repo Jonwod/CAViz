@@ -40,7 +40,7 @@ class SimState extends State {
             const nDimensions = 3;
             const transitionRule = transitionRuleFromBaysCoding(nDimensions, new Range(4, 5), new Range(2, 6));
             let testCA = new CellularAutomaton(nStates, nDimensions, transitionRule);
-            let config = Configuration.makeRandom(3, 10, 2, 0.34);
+            let config = Configuration.makeRandom(3, 100, 2, 0.34);
             sim = createSimulation(testCA, config);
         }
         else {

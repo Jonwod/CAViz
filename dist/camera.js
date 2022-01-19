@@ -9,7 +9,7 @@ export class Camera {
         this.pitch = 0.2;
         this.x = 0;
         this.y = 0;
-        this.z = -15;
+        this.z = -300;
         this.keyState = { x: false, y: false, z: false };
         this.lastMousePosition = { x: NaN, y: NaN };
         this.fov = fieldOfView;
