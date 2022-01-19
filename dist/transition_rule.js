@@ -1,5 +1,5 @@
 import { assert } from "./assert.js";
-import { vecAdd } from "./vector_math.js";
+import { vecAdd } from "./generic/math/array_vector_math.js";
 export class Neigbourhood {
     constructor(numDimensions, neigbours) {
         neigbours.forEach((x) => {
