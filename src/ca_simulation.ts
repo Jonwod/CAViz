@@ -7,7 +7,7 @@ import { Configuration } from "./configuration";
  * possible.
  */
 export abstract class CASimulation {
-    private rootElement: HTMLElement;
+    protected rootElement: HTMLElement;
     protected canvas: HTMLCanvasElement;
     protected gl: WebGL2RenderingContext;
     protected worldSize: number;
