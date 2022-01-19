@@ -328,11 +328,6 @@ export class CASimulation3D extends CASimulation {
         }
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 
-        // Setup index buffer
-        this.buffers.index = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareIndices), gl.STATIC_DRAW);
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
         // UV buffer
         this.buffers.uv = gl.createBuffer();
@@ -350,6 +345,11 @@ export class CASimulation3D extends CASimulation {
             gl.vertexAttribPointer(this.renderProgramInfo.attribLocations.texCoord, num, type, normalize, stride, offset);
             gl.enableVertexAttribArray(this.renderProgramInfo.attribLocations.texCoord);
         }
+
+        // Setup index buffer
+        this.buffers.index = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareIndices), gl.STATIC_DRAW);
         // ============================================
 
         gl.bindVertexArray(null);
@@ -475,18 +475,21 @@ export class CASimulation3D extends CASimulation {
         gl.viewport(0, 0, this.textureSize, this.textureSize);
         gl.useProgram(this.computeProgramInfo.program);
 
+
+
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
         gl.uniform1i(this.computeProgramInfo.uniformLocations.uReadBuffer, 0);
         gl.uniform1i(this.computeProgramInfo.uniformLocations.uWorldSize, this.worldSize);
 
+
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer); 
         const attachmentPoint = gl.COLOR_ATTACHMENT0;
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, 0);
 
-        // Drawing quad
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
+        // Draw the quad
         gl.bindVertexArray(this.vao);
+
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
         gl.bindVertexArray(null);
 

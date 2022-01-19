@@ -280,7 +280,7 @@ export class VoxelMesh {
         {
             const offset = 0;
             // gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.index);
+            // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.index);
             const instanceCount = this.gridSize ** 3;
             gl.drawElementsInstanced(gl.TRIANGLES, buffers.indexCount, gl.UNSIGNED_SHORT, offset, instanceCount);
         }
