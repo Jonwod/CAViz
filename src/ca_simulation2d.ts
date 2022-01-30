@@ -279,39 +279,8 @@ export class CASimulation2D extends CASimulation {
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, 0);
     }
 
-    public run(): void {
-        // hz
-        const drawRate = 60.0;
-        const caUpdateRate = 60.0;
-        let lastDrawStamp, lastCaUpdateStamp;
-        let that = this;
-
-        function tick(timestamp) {
-            if (lastDrawStamp === undefined)
-                lastDrawStamp = timestamp;
-            if(lastCaUpdateStamp === undefined)
-                lastCaUpdateStamp = timestamp;
-            const timeSinceDraw = timestamp - lastDrawStamp;
-
-            if ( (timeSinceDraw/1000.0) >= (1.0/drawRate) ) {        
-                // Do the rendering here
-                that.render();
-                lastDrawStamp = timestamp;
-            }
-
-            const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
-            if( (timeSinceCaUpdate/1000.0) >= (1.0/caUpdateRate) ) {
-                that.update();
-                lastCaUpdateStamp = timestamp;
-            }
-
-            window.requestAnimationFrame(tick);
-        }
-        window.requestAnimationFrame(tick);
-    }
-
     // Not clear at this point if this will have to be smooshed up with update()
-    private render() {
+    protected draw(): void {
         const gl = this.gl;
 
         // This makes sure we are rendering to the canvas, not framebuffer
@@ -342,7 +311,7 @@ export class CASimulation2D extends CASimulation {
     /**
      * Update the world texture on the GPU
      */
-    private update() {
+    protected update(): void {
         const gl = this.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
         gl.viewport(0, 0, this.worldSize, this.worldSize);

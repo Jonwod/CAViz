@@ -50,5 +50,37 @@ export abstract class CASimulation {
      * Will run indefinitely in it's own loop, updating the canvas
      * This function should be non-blocking
      */
-    public abstract run(): void;
+    public run(): void {
+        // hz
+        const drawRate = 60.0;
+        const caUpdateRate = 60.0;
+        let lastDrawStamp, lastCaUpdateStamp;
+        let that = this;
+
+        function tick(timestamp) {
+            if (lastDrawStamp === undefined)
+                lastDrawStamp = timestamp;
+            if(lastCaUpdateStamp === undefined)
+                lastCaUpdateStamp = timestamp;
+            const timeSinceDraw = timestamp - lastDrawStamp;
+
+            if ( (timeSinceDraw/1000.0) >= (1.0/drawRate) ) {        
+                that.draw();
+                lastDrawStamp = timestamp;
+            }
+
+            const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
+            if( (timeSinceCaUpdate/1000.0) >= (1.0/caUpdateRate) ) {
+                that.update();
+                lastCaUpdateStamp = timestamp;
+            }
+
+            window.requestAnimationFrame(tick);
+        }
+        window.requestAnimationFrame(tick);
+    }
+
+
+    protected abstract update(): void;
+    protected abstract draw(): void;
 }

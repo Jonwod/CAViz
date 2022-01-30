@@ -372,39 +372,13 @@ export class CASimulation3D extends CASimulation {
         this.writeBuffer = temp;
     }
 
-    public run(): void {
-        // hz
-        const drawRate = 60.0;
-        const caUpdateRate = 60.0;
-        let lastDrawStamp, lastCaUpdateStamp;
-        let that = this;
 
-        function tick(timestamp) {
-            if (lastDrawStamp === undefined)
-                lastDrawStamp = timestamp;
-            if(lastCaUpdateStamp === undefined)
-                lastCaUpdateStamp = timestamp;
-            const timeSinceDraw = timestamp - lastDrawStamp;
-
-            if ( (timeSinceDraw/1000.0) >= (1.0/drawRate) ) {        
-                if(that.drawFlat) {
-                    that.renderFlat();
-                } else {
-                    that.render();
-                }
-
-                lastDrawStamp = timestamp;
-            }
-
-            const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
-            if( (timeSinceCaUpdate/1000.0) >= (1.0/caUpdateRate) ) {
-                that.update();
-                lastCaUpdateStamp = timestamp;
-            }
-
-            window.requestAnimationFrame(tick);
+    protected draw(): void {
+        if(this.drawFlat) {
+            this.renderFlat();
+        } else {
+            this.render();
         }
-        window.requestAnimationFrame(tick);
     }
 
     private render() {
@@ -469,7 +443,7 @@ export class CASimulation3D extends CASimulation {
     /**
      * Update the world texture on the GPU
      */
-    private update() {
+    protected update(): void {
         const gl = this.gl;
 
         gl.viewport(0, 0, this.textureSize, this.textureSize);
