@@ -11,12 +11,18 @@ export abstract class CASimulation {
     protected canvas: HTMLCanvasElement;
     protected gl: WebGL2RenderingContext;
     protected worldSize: number;
+    private framerate: number;
+    private fpsCounter: HTMLParagraphElement;
 
     constructor(ca: CellularAutomaton, initialConfiguration: Configuration, width: number, height: number) {
         const worldSize = initialConfiguration.getSize();
         this.worldSize = worldSize;
         
         let div = document.createElement("div");
+        this.fpsCounter = document.createElement("p");
+
+        div.appendChild(this.fpsCounter);
+
         this.canvas = document.createElement("canvas");
         this.canvas.width = width;
         this.canvas.height = height;
@@ -46,6 +52,10 @@ export abstract class CASimulation {
         return this.canvas.height;
     }
 
+    public getFramerate(): number {
+        return this.framerate;
+    }
+
     /**
      * Will run indefinitely in it's own loop, updating the canvas
      * This function should be non-blocking
@@ -67,6 +77,8 @@ export abstract class CASimulation {
             if ( (timeSinceDraw/1000.0) >= (1.0/drawRate) ) {        
                 that.draw();
                 lastDrawStamp = timestamp;
+                that.framerate = (1.0 / timeSinceDraw) * 1000;
+                that.fpsCounter.innerHTML = that.framerate.toString();
             }
 
             const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
