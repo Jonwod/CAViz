@@ -111,5 +111,7 @@ export class Camera {
 
     private onWheelHandler(event: WheelEvent) {
         this.z += event.deltaY * this.mouseZoomRate;
+        // Prevents scrolling the page when zooming:
+        event.preventDefault();
     }
 }
