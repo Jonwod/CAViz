@@ -78,7 +78,7 @@ export abstract class CASimulation {
                 that.draw();
                 lastDrawStamp = timestamp;
                 that.framerate = (1.0 / timeSinceDraw) * 1000;
-                that.fpsCounter.innerHTML = that.framerate.toString();
+                that.fpsCounter.innerHTML = that.framerate.toFixed(2).toString();
             }
 
             const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
