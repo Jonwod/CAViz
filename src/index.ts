@@ -139,6 +139,46 @@ class ConstructionState extends State {
 
             div.appendChild(totalisticParamsDiv);
         }
+
+        {
+            let configDiv  = document.createElement("div");
+
+            let worldSizeLabel = document.createElement("p");
+            worldSizeLabel.innerHTML = "<b>World size:</b>";
+            configDiv.appendChild(worldSizeLabel);
+
+            let worldSizeInput = document.createElement("input");
+            worldSizeInput.addEventListener("change", (e) => {
+                // TODO: validate
+                let input = e.target as HTMLInputElement;
+                that.worldSize = parseInt(input.value);
+            });
+            worldSizeInput.value = this.worldSize.toString();
+
+            configDiv.appendChild(worldSizeInput);
+
+            let popDensityLabel = document.createElement("p");
+            popDensityLabel.innerHTML = "<b>Initial population density:</b>";
+            configDiv.appendChild(popDensityLabel);
+
+            let popDensityInput = document.createElement("input");
+            popDensityInput.addEventListener("change", (e) => {
+                // TODO: validate
+                let input = e.target as HTMLInputElement;
+                that.popDensity = parseInt(input.value);
+            });
+            popDensityInput.value = this.popDensity.toString();
+            configDiv.appendChild(popDensityInput);
+
+            [   worldSizeInput, 
+                popDensityInput].forEach((inputField) => {
+                    inputField.setAttribute("type", "number");
+                    inputField.setAttribute("min", "0");
+            });
+
+
+            div.appendChild(configDiv);
+        }
         // TODO: World size
         // TODO: Pop density
 
@@ -153,7 +193,7 @@ class ConstructionState extends State {
                 new Range(that.reproduceLower, that.reproduceUpper)
             );
             let ca = new CellularAutomaton(numStates, that.dimensions, transitionRule);
-            let conf = Configuration.makeRandom(that.dimensions, that.size, numStates, that.popDensity);
+            let conf = Configuration.makeRandom(that.dimensions, that.worldSize, numStates, that.popDensity);
             appStateMachine.setState(new SimState(ca, conf));
         });
         div.appendChild(confirmButton);
@@ -187,7 +227,7 @@ class ConstructionState extends State {
     private myHTML: HTMLElement;
 
     private dimensions: number;
-    private size: number = 100;
+    private worldSize: number = 100;
     private popDensity: number = 0.34;
     private keepAliveLower: number;
     private keepAliveUpper: number;
