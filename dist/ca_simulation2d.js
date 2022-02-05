@@ -215,31 +215,7 @@ export class CASimulation2D extends CASimulation {
         const attachmentPoint = gl.COLOR_ATTACHMENT0;
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, 0);
     }
-    run() {
-        const drawRate = 60.0;
-        const caUpdateRate = 60.0;
-        let lastDrawStamp, lastCaUpdateStamp;
-        let that = this;
-        function tick(timestamp) {
-            if (lastDrawStamp === undefined)
-                lastDrawStamp = timestamp;
-            if (lastCaUpdateStamp === undefined)
-                lastCaUpdateStamp = timestamp;
-            const timeSinceDraw = timestamp - lastDrawStamp;
-            if ((timeSinceDraw / 1000.0) >= (1.0 / drawRate)) {
-                that.render();
-                lastDrawStamp = timestamp;
-            }
-            const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
-            if ((timeSinceCaUpdate / 1000.0) >= (1.0 / caUpdateRate)) {
-                that.update();
-                lastCaUpdateStamp = timestamp;
-            }
-            window.requestAnimationFrame(tick);
-        }
-        window.requestAnimationFrame(tick);
-    }
-    render() {
+    draw() {
         const gl = this.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, this.getCanvasWidth(), this.getCanvasHeight());

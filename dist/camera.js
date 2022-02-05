@@ -76,5 +76,6 @@ export class Camera {
     }
     onWheelHandler(event) {
         this.z += event.deltaY * this.mouseZoomRate;
+        event.preventDefault();
     }
 }

@@ -301,34 +301,13 @@ export class CASimulation3D extends CASimulation {
         this.readBuffer = this.writeBuffer;
         this.writeBuffer = temp;
     }
-    run() {
-        const drawRate = 60.0;
-        const caUpdateRate = 60.0;
-        let lastDrawStamp, lastCaUpdateStamp;
-        let that = this;
-        function tick(timestamp) {
-            if (lastDrawStamp === undefined)
-                lastDrawStamp = timestamp;
-            if (lastCaUpdateStamp === undefined)
-                lastCaUpdateStamp = timestamp;
-            const timeSinceDraw = timestamp - lastDrawStamp;
-            if ((timeSinceDraw / 1000.0) >= (1.0 / drawRate)) {
-                if (that.drawFlat) {
-                    that.renderFlat();
-                }
-                else {
-                    that.render();
-                }
-                lastDrawStamp = timestamp;
-            }
-            const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
-            if ((timeSinceCaUpdate / 1000.0) >= (1.0 / caUpdateRate)) {
-                that.update();
-                lastCaUpdateStamp = timestamp;
-            }
-            window.requestAnimationFrame(tick);
+    draw() {
+        if (this.drawFlat) {
+            this.renderFlat();
         }
-        window.requestAnimationFrame(tick);
+        else {
+            this.render();
+        }
     }
     render() {
         const gl = this.gl;
