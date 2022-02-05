@@ -9,6 +9,8 @@ import { CASimulation } from "./ca_simulation.js";
 import { createSimulation } from "./create_simulation.js";
 import { State, StateMachine } from "./generic/state_machine.js";
 import {MeshTemplate} from "./mesh_template.js";
+import {NumberInput} from "./ui/number_input.js";
+
 declare var mat4: any;
 
 let appStateMachine: StateMachine;
@@ -76,45 +78,13 @@ class ConstructionState extends State {
             div.appendChild(dimensionalityDiv);
         }
 
+        let stayAliveInputLow = new NumberInput(2, true, 0);
+        let stayAliveInputHigh = new NumberInput(3, true, 0);
+        let reproduceInputLow = new NumberInput(3, true, 0);
+        let reproduceInputHigh = new NumberInput(3, true, 0);
+
         {
             let totalisticParamsDiv = document.createElement("div");
-
-            let stayAliveInputLow = document.createElement("input");
-            stayAliveInputLow.addEventListener("change", (e) => {
-                // TODO: validate
-                let input = e.target as HTMLInputElement;
-                that.keepAliveLower = parseInt(input.value);
-            });
-
-            let stayAliveInputHigh = document.createElement("input");
-            stayAliveInputHigh.addEventListener("change", (e) => {
-                // TODO: validate
-                let input = e.target as HTMLInputElement;
-                that.keepAliveUpper = parseInt(input.value);
-            });
-
-            let reproduceInputLow = document.createElement("input");
-            reproduceInputLow.addEventListener("change", (e) => {
-                // TODO: validate
-                let input = e.target as HTMLInputElement;
-                that.reproduceLower = parseInt(input.value);
-            });
-
-            let reproduceInputHigh = document.createElement("input");
-            reproduceInputHigh.addEventListener("change", (e) => {
-                // TODO: validate
-                let input = e.target as HTMLInputElement;
-                that.reproduceUpper = parseInt(input.value);
-            });
-
-            [   stayAliveInputLow, 
-                stayAliveInputHigh, 
-                reproduceInputLow, 
-                reproduceInputHigh].forEach((inputField) => {
-                    inputField.setAttribute("type", "number");
-                    inputField.setAttribute("min", "0");
-            });
-
             let aliveRangeLable = document.createElement("p");
             aliveRangeLable.innerHTML = "<b>Stay-alive range</b>";
             totalisticParamsDiv.appendChild(aliveRangeLable);
@@ -123,8 +93,8 @@ class ConstructionState extends State {
             aliveRangeExpl.innerHTML = "(Live cell will remain alive when the number of live neighbours falls in this range)";
             totalisticParamsDiv.appendChild(aliveRangeExpl);
         
-            totalisticParamsDiv.appendChild(stayAliveInputLow);
-            totalisticParamsDiv.appendChild(stayAliveInputHigh);
+            totalisticParamsDiv.appendChild(stayAliveInputLow.html());
+            totalisticParamsDiv.appendChild(stayAliveInputHigh.html());
 
             let reproduceRangeLabel = document.createElement("p");
             reproduceRangeLabel.innerHTML = "<b>Reproduce range</b>";
@@ -134,11 +104,14 @@ class ConstructionState extends State {
             reproduceRangeExpl.innerHTML = "(Dead cell becomes alive when the number of live neighbours falls in this range)";
             totalisticParamsDiv.appendChild(reproduceRangeExpl);
 
-            totalisticParamsDiv.appendChild(reproduceInputLow);
-            totalisticParamsDiv.appendChild(reproduceInputHigh);
+            totalisticParamsDiv.appendChild(reproduceInputLow.html());
+            totalisticParamsDiv.appendChild(reproduceInputHigh.html());
 
             div.appendChild(totalisticParamsDiv);
         }
+
+        let worldSizeInput = new NumberInput(100, true, 0);
+        let popDensityInput = new NumberInput(0.34, false, 0, 1);
 
         {
             let configDiv  = document.createElement("div");
@@ -147,40 +120,16 @@ class ConstructionState extends State {
             worldSizeLabel.innerHTML = "<b>World size:</b>";
             configDiv.appendChild(worldSizeLabel);
 
-            let worldSizeInput = document.createElement("input");
-            worldSizeInput.addEventListener("change", (e) => {
-                // TODO: validate
-                let input = e.target as HTMLInputElement;
-                that.worldSize = parseInt(input.value);
-            });
-            worldSizeInput.value = this.worldSize.toString();
-
-            configDiv.appendChild(worldSizeInput);
+            configDiv.appendChild(worldSizeInput.html());
 
             let popDensityLabel = document.createElement("p");
             popDensityLabel.innerHTML = "<b>Initial population density:</b>";
             configDiv.appendChild(popDensityLabel);
 
-            let popDensityInput = document.createElement("input");
-            popDensityInput.addEventListener("change", (e) => {
-                // TODO: validate
-                let input = e.target as HTMLInputElement;
-                that.popDensity = parseFloat(input.value);
-            });
-            popDensityInput.value = this.popDensity.toString();
-            configDiv.appendChild(popDensityInput);
-
-            [   worldSizeInput, 
-                popDensityInput].forEach((inputField) => {
-                    inputField.setAttribute("type", "number");
-                    inputField.setAttribute("min", "0");
-            });
-
+            configDiv.appendChild(popDensityInput.html());
 
             div.appendChild(configDiv);
         }
-        // TODO: World size
-        // TODO: Pop density
 
         let confirmButton = document.createElement("button");
         confirmButton.innerText = "Simulate";
@@ -188,20 +137,13 @@ class ConstructionState extends State {
             // TODO: Parameterize no. states
             const numStates = 2;
 
-            console.log(`that.keepAliveLower ${that.keepAliveLower}`);
-            console.log(`that.keepAliveUpper ${that.keepAliveUpper}`);
-            console.log(`that.reproduceLower ${that.reproduceLower}`);
-            console.log(`that.reproduceUpper ${that.reproduceUpper}`);
-            console.log(`that.popDensity ${that.popDensity}`);
-            console.log(`that.worldSize ${that.worldSize}`);
-
-
             let transitionRule = transitionRuleFromBaysCoding(that.dimensions, 
-                new Range(that.keepAliveLower, that.keepAliveUpper), 
-                new Range(that.reproduceLower, that.reproduceUpper)
+                new Range(stayAliveInputLow.getValue(), stayAliveInputHigh.getValue()), 
+                new Range(reproduceInputLow.getValue(), reproduceInputHigh.getValue())
             );
+
             let ca = new CellularAutomaton(numStates, that.dimensions, transitionRule);
-            let conf = Configuration.makeRandom(that.dimensions, that.worldSize, numStates, that.popDensity);
+            let conf = Configuration.makeRandom(that.dimensions, worldSizeInput.getValue(), numStates, popDensityInput.getValue());
             appStateMachine.setState(new SimState(ca, conf));
         });
         div.appendChild(confirmButton);
@@ -227,20 +169,11 @@ class ConstructionState extends State {
     //     sim = createSimulation(life2d, initConfig);
     // }
 
-
     onExit(): void {
         this.myHTML.remove();
     }
-
     private myHTML: HTMLElement;
-
     private dimensions: number;
-    private worldSize: number = 100;
-    private popDensity: number = 0.34;
-    private keepAliveLower: number;
-    private keepAliveUpper: number;
-    private reproduceLower: number;
-    private reproduceUpper: number;
 }
 
 class SimState extends State {
