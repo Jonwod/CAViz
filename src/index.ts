@@ -165,7 +165,7 @@ class ConstructionState extends State {
             popDensityInput.addEventListener("change", (e) => {
                 // TODO: validate
                 let input = e.target as HTMLInputElement;
-                that.popDensity = parseInt(input.value);
+                that.popDensity = parseFloat(input.value);
             });
             popDensityInput.value = this.popDensity.toString();
             configDiv.appendChild(popDensityInput);
@@ -187,6 +187,14 @@ class ConstructionState extends State {
         confirmButton.addEventListener("click", () => {
             // TODO: Parameterize no. states
             const numStates = 2;
+
+            console.log(`that.keepAliveLower ${that.keepAliveLower}`);
+            console.log(`that.keepAliveUpper ${that.keepAliveUpper}`);
+            console.log(`that.reproduceLower ${that.reproduceLower}`);
+            console.log(`that.reproduceUpper ${that.reproduceUpper}`);
+            console.log(`that.popDensity ${that.popDensity}`);
+            console.log(`that.worldSize ${that.worldSize}`);
+
 
             let transitionRule = transitionRuleFromBaysCoding(that.dimensions, 
                 new Range(that.keepAliveLower, that.keepAliveUpper), 
