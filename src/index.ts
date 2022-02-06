@@ -6,7 +6,6 @@ import { Configuration } from "./configuration.js";
 import {nDimensionalIterate} from "./n_dimensional_iterate.js";
 import { transitionRuleFromBaysCoding } from "./bays_coding.js";
 import { CASimulation } from "./ca_simulation.js";
-import { createSimulation } from "./create_simulation.js";
 import { State, StateMachine } from "./generic/state_machine.js";
 import {MeshTemplate} from "./mesh_template.js";
 import {NumberInput} from "./ui/number_input.js";
@@ -184,7 +183,7 @@ class SimState extends State {
     }
 
     onEnter(): void {
-        let sim: CASimulation = createSimulation(this.ca, this.initConfig);
+        let sim: CASimulation = new CASimulation(this.ca, this.initConfig, 800, 800);
 
         let div = document.createElement("div");
         this.myHTML = div; 
