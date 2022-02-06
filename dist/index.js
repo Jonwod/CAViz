@@ -3,7 +3,7 @@ import { CellularAutomaton } from "./cellular_automaton.js";
 import { Range } from "./range.js";
 import { Configuration } from "./configuration.js";
 import { transitionRuleFromBaysCoding } from "./bays_coding.js";
-import { createSimulation } from "./create_simulation.js";
+import { CASimulation } from "./ca_simulation.js";
 import { State, StateMachine } from "./generic/state_machine.js";
 import { NumberInput } from "./ui/number_input.js";
 let appStateMachine;
@@ -106,7 +106,7 @@ class SimState extends State {
         this.initConfig = initConfig;
     }
     onEnter() {
-        let sim = createSimulation(this.ca, this.initConfig);
+        let sim = new CASimulation(this.ca, this.initConfig, 800, 800);
         let div = document.createElement("div");
         this.myHTML = div;
         div.appendChild(sim.getHTML());
