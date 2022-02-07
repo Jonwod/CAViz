@@ -25,22 +25,23 @@ export class CASimulation {
         this.canvas = document.createElement("canvas");
         this.canvas.width = width;
         this.canvas.height = height;
+
+        let div = document.createElement("div");
+        this.fpsCounter = document.createElement("p");
+        div.appendChild(this.fpsCounter);
+
+
+        div.appendChild(this.canvas);
+        this.rootElement = div;
+
         const gl = this.canvas.getContext("webgl2")
         if(gl === null) {
             alert("Unable to initialize WebGL. Your browser or machine may not support it.");
             return null;
         }
         this.gl = gl;
-        
-        let div = document.createElement("div");
-        this.fpsCounter = document.createElement("p");
-        div.appendChild(this.fpsCounter);
-
-
         this.gl.clearColor(0,0,0,1);        // Is this necessary here?
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-        div.appendChild(this.canvas);
-        this.rootElement = div;
 
         this.readBuffer = gl.createTexture();
         this.writeBuffer = gl.createTexture();
@@ -89,7 +90,7 @@ export class CASimulation {
 
             gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                worldSize, worldSize, border,
+                textureSize, textureSize, border,
                 format, type, data);
 
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -100,7 +101,7 @@ export class CASimulation {
             // Init writebuffer
             gl.bindTexture(gl.TEXTURE_2D, this.writeBuffer);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                worldSize, worldSize, border,
+                textureSize, textureSize, border,
                 format, type, null);
 
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -493,14 +494,17 @@ export class CASimulation {
         gl.enable(gl.DEPTH_TEST);           // Enable depth testing
         gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
 
+        gl.viewport(0, 0, gl.canvas.clientWidth, gl.canvas.clientHeight);
+
         // // This makes sure we are rendering to the canvas, not framebuffer
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.viewport(0, 0, this.getCanvasWidth(), this.getCanvasHeight());
       
+        //console.log(`Canvas width: ${gl.canvas.clientWidth}, height: ${gl.canvas.clientHeight}`);
+
         // // Clear the canvas before we start drawing on it.
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
+        const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 
         // Allow for change in aspect ratio
         this.camera.setAspectRatio(aspect);
@@ -562,7 +566,8 @@ export class CASimulation {
      protected update(): void {
         const gl = this.gl;
 
-        gl.viewport(0, 0, this.textureSize, this.textureSize);
+        // console.log(`texturesize: ${this.textureSize}`);
+
         gl.useProgram(this.computeProgramInfo.program);
 
         gl.activeTexture(gl.TEXTURE0);
@@ -570,10 +575,11 @@ export class CASimulation {
         gl.uniform1i(this.computeProgramInfo.uniformLocations.uReadBuffer, 0);
         gl.uniform1i(this.computeProgramInfo.uniformLocations.uWorldSize, this.worldSize);
 
-
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer); 
         const attachmentPoint = gl.COLOR_ATTACHMENT0;
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, 0);
+
+        gl.viewport(0, 0, this.textureSize, this.textureSize);
 
         // Draw the quad
         gl.bindVertexArray(this.vao);
