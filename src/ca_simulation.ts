@@ -4,6 +4,7 @@ import { Configuration } from "./configuration";
 import { makeProgram } from "./gl_helpers.js";
 import { VoxelMesh } from "./voxel_mesh.js";
 import { Camera } from "./camera.js";
+import {TransitionRule, TotalisticTransitionRule} from "./transition_rule.js";
 declare var mat4: any;
 
 /**
@@ -234,6 +235,13 @@ export class CASimulation {
             `;
         }
 
+        // Add common functions
+        assert(ca.getTransitionRule() instanceof TotalisticTransitionRule, 
+               "Only totalistic cellular automata are supported for running on GPU, currently"
+        );
+        let ttr = ca.getTransitionRule() as TotalisticTransitionRule;
+        this.computeProgramInfo.fragmentShaderSource += ttr.makeShaderTransitionFunction();
+
         this.computeProgramInfo.fragmentShaderSource +=
         `
         void main() {
@@ -291,20 +299,25 @@ export class CASimulation {
             assert(false, `sorry, ${ca.getNumDimensions()} dimensions not yet supported`);
         }
 
-        // TODO: Insert actual update rule
-        this.computeProgramInfo.fragmentShaderSource +=
-        `
-        uint x = texture(uReadBuffer, vTexCoord).a;
-        uint newState = x;
-        if(x == 1u  &&  (n < 2u || n > 3u)) {
-            newState = 0u;
-        }
-        else if(x == 0u  &&  n == 3u) {
-            newState = 1u;
-        }
+        // this.computeProgramInfo.fragmentShaderSource +=
+        // `
+        // uint x = texture(uReadBuffer, vTexCoord).a;
+        // uint newState = x;
+        // if(x == 1u  &&  (n < 2u || n > 3u)) {
+        //     newState = 0u;
+        // }
+        // else if(x == 0u  &&  n == 3u) {
+        //     newState = 1u;
+        // }
 
-        fragColor = uvec4(0, 0, 0, newState);
-        `;
+        // fragColor = uvec4(0, 0, 0, newState);
+        // `;
+
+        this.computeProgramInfo.fragmentShaderSource += 
+`
+uint x = texture(uReadBuffer, vTexCoord).a;
+fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
+`       ;
 
         // Close main function
         this.computeProgramInfo.fragmentShaderSource +=
