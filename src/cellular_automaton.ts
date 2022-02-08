@@ -14,6 +14,7 @@ export class CellularAutomaton {
         "Transition rule num dimensions must match the cellular automaton's");
         this.numStates = numStates;
         this.numDimensions = numDimensions;
+        this.transitionRule = transitionRule;
     }
 
     public makeRandomConfiguration(size: number, populationDensity: number): Configuration {
