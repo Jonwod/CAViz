@@ -155,5 +155,35 @@ export class TotalisticTransitionRule extends TransitionRule {
         return cellValue;
     }
 
+    /**
+     * Returns a GLSL function with the signature
+     * uint totalisticTransitionFunction(uint currentValue, uint neighbourSum);
+     */
+    public makeShaderTransitionFunction(): string {
+        let f = "uint totalisticTransitionFunction(uint x, uint n) {";
+        for(let i = 0; i < this.singleStateRules.length; ++i) {
+            const rule = this.singleStateRules[i];
+            f += (i == 0 ? "\nif" : "\nelse if");
+            // That u on the end is because we are using unsigned ints for states
+            f += `(x == ${rule.startState}u) {\n`;
+            for(let j = 0; j < rule.transitions.length; ++j) {
+                const transition = rule.transitions[j];
+                const range = transition.range;
+                f += (j == 0 ? "\n  if" : "\n   else if");
+                f += 
+    `(n >= ${range.getStart()}u && n <= ${range.getEnd()}u) {
+        return ${transition.endState}u;
+    }\n`;
+            }
+            f += "}\n";
+        }
+        f += "\nreturn x;\n";
+        f += "}";
+        return f;
+    }
+
     private singleStateRules: SingleStateTotalisticTransitionRule[];
 }
+
+
+
