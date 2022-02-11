@@ -106,7 +106,7 @@ class SimState extends State {
         this.initConfig = initConfig;
     }
     onEnter() {
-        let sim = new CASimulation(this.ca, this.initConfig, 800, 800);
+        let sim = new CASimulation(this.ca, this.initConfig, 1000, 1000);
         let div = document.createElement("div");
         this.myHTML = div;
         div.appendChild(sim.getHTML());

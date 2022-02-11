@@ -7,6 +7,7 @@ export class CellularAutomaton {
         assert(transitionRule.getNumDimensions() == numDimensions, "Transition rule num dimensions must match the cellular automaton's");
         this.numStates = numStates;
         this.numDimensions = numDimensions;
+        this.transitionRule = transitionRule;
     }
     makeRandomConfiguration(size, populationDensity) {
         return Configuration.makeRandom(this.numDimensions, size, this.numStates, populationDensity);

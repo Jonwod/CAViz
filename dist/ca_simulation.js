@@ -2,27 +2,24 @@ import { assert } from "./assert.js";
 import { makeProgram } from "./gl_helpers.js";
 import { VoxelMesh } from "./voxel_mesh.js";
 import { Camera } from "./camera.js";
+import { TotalisticTransitionRule } from "./transition_rule.js";
 export class CASimulation {
     constructor(ca, initialConfiguration, width, height) {
         this.drawFlat = false;
+        this.ui = {
+            pauseButton: null
+        };
         const worldSize = initialConfiguration.getSize();
         this.worldSize = worldSize;
-        this.canvas = document.createElement("canvas");
-        this.canvas.width = width;
-        this.canvas.height = height;
+        this.makeUI(width, height);
         const gl = this.canvas.getContext("webgl2");
         if (gl === null) {
             alert("Unable to initialize WebGL. Your browser or machine may not support it.");
             return null;
         }
         this.gl = gl;
-        let div = document.createElement("div");
-        this.fpsCounter = document.createElement("p");
-        div.appendChild(this.fpsCounter);
         this.gl.clearColor(0, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-        div.appendChild(this.canvas);
-        this.rootElement = div;
         this.readBuffer = gl.createTexture();
         this.writeBuffer = gl.createTexture();
         const numCells = initialConfiguration.getData().length;
@@ -56,13 +53,13 @@ export class CASimulation {
                 data[j++] = 0;
             }
             gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
-            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, worldSize, worldSize, border, format, type, data);
+            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureSize, textureSize, border, format, type, data);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.bindTexture(gl.TEXTURE_2D, this.writeBuffer);
-            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, worldSize, worldSize, border, format, type, null);
+            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureSize, textureSize, border, format, type, null);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -181,6 +178,9 @@ export class CASimulation {
             }
             `;
         }
+        assert(ca.getTransitionRule() instanceof TotalisticTransitionRule, "Only totalistic cellular automata are supported for running on GPU, currently");
+        let ttr = ca.getTransitionRule();
+        this.computeProgramInfo.fragmentShaderSource += ttr.makeShaderTransitionFunction();
         this.computeProgramInfo.fragmentShaderSource +=
             `
         void main() {
@@ -237,17 +237,9 @@ export class CASimulation {
         }
         this.computeProgramInfo.fragmentShaderSource +=
             `
-        uint x = texture(uReadBuffer, vTexCoord).a;
-        uint newState = x;
-        if(x == 1u  &&  (n < 2u || n > 3u)) {
-            newState = 0u;
-        }
-        else if(x == 0u  &&  n == 3u) {
-            newState = 1u;
-        }
-
-        fragColor = uvec4(0, 0, 0, newState);
-        `;
+uint x = texture(uReadBuffer, vTexCoord).a;
+fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
+`;
         this.computeProgramInfo.fragmentShaderSource +=
             `
         }
@@ -343,6 +335,22 @@ export class CASimulation {
     getFramerate() {
         return this.framerate;
     }
+    makeUI(canvasWidth, canvasHeight) {
+        let div = document.createElement("div");
+        this.fpsCounter = document.createElement("p");
+        div.appendChild(this.fpsCounter);
+        this.ui.pauseButton = document.createElement("input");
+        this.ui.pauseButton.type = "checkbox";
+        div.appendChild(this.ui.pauseButton);
+        this.canvas = document.createElement("canvas");
+        this.canvas.width = canvasWidth;
+        this.canvas.height = canvasHeight;
+        div.appendChild(this.canvas);
+        this.rootElement = div;
+    }
+    isPaused() {
+        return this.ui.pauseButton.checked;
+    }
     run() {
         const drawRate = 60.0;
         const caUpdateRate = 60.0;
@@ -361,7 +369,7 @@ export class CASimulation {
                 that.fpsCounter.innerHTML = that.framerate.toFixed(2).toString();
             }
             const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
-            if ((timeSinceCaUpdate / 1000.0) >= (1.0 / caUpdateRate)) {
+            if ((timeSinceCaUpdate / 1000.0) >= (1.0 / caUpdateRate) && !that.isPaused()) {
                 that.update();
                 lastCaUpdateStamp = timestamp;
             }
@@ -382,10 +390,10 @@ export class CASimulation {
         gl.clearDepth(1.0);
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LEQUAL);
+        gl.viewport(0, 0, gl.canvas.clientWidth, gl.canvas.clientHeight);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.viewport(0, 0, this.getCanvasWidth(), this.getCanvasHeight());
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
+        const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
         this.camera.setAspectRatio(aspect);
         this.camera.processInput();
         const modelViewMatrix = mat4.create();
@@ -422,7 +430,6 @@ export class CASimulation {
     }
     update() {
         const gl = this.gl;
-        gl.viewport(0, 0, this.textureSize, this.textureSize);
         gl.useProgram(this.computeProgramInfo.program);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
@@ -431,6 +438,7 @@ export class CASimulation {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
         const attachmentPoint = gl.COLOR_ATTACHMENT0;
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, 0);
+        gl.viewport(0, 0, this.textureSize, this.textureSize);
         gl.bindVertexArray(this.vao);
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
         gl.bindVertexArray(null);

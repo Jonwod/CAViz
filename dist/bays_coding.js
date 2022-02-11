@@ -22,7 +22,7 @@ export function transitionRuleFromBaysCoding(nDimensions, keepAlive, reproduce) 
     if (keepAlive.getStart() > 0) {
         deathTransitions.transitions.push({
             endState: 0,
-            range: new Range(0, keepAlive.getEnd() - 1)
+            range: new Range(0, keepAlive.getStart() - 1)
         });
     }
     if (reproduce.getStart() - keepAlive.getEnd() > 1) {
@@ -34,7 +34,7 @@ export function transitionRuleFromBaysCoding(nDimensions, keepAlive, reproduce) 
     if (reproduce.getEnd() < (neigbourhood.getNumNeighbours())) {
         deathTransitions.transitions.push({
             endState: 0,
-            range: new Range(reproduce.getEnd(), neigbourhood.getNumNeighbours())
+            range: new Range(reproduce.getEnd() + 1, neigbourhood.getNumNeighbours())
         });
     }
     singleStateTransitions.push(deathTransitions);
