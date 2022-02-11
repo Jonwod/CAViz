@@ -14,6 +14,7 @@ declare var mat4: any;
 
 let appStateMachine: StateMachine;
 
+
 class ConstructionState extends State {
     onEnter(): void {
         let div = document.createElement("div");
@@ -183,7 +184,7 @@ class SimState extends State {
     }
 
     onEnter(): void {
-        let sim: CASimulation = new CASimulation(this.ca, this.initConfig, 800, 800);
+        let sim: CASimulation = new CASimulation(this.ca, this.initConfig, 1000, 1000);
 
         let div = document.createElement("div");
         this.myHTML = div; 

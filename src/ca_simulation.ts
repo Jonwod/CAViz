@@ -23,17 +23,7 @@ export class CASimulation {
         const worldSize = initialConfiguration.getSize();
         this.worldSize = worldSize;
 
-        this.canvas = document.createElement("canvas");
-        this.canvas.width = width;
-        this.canvas.height = height;
-
-        let div = document.createElement("div");
-        this.fpsCounter = document.createElement("p");
-        div.appendChild(this.fpsCounter);
-
-
-        div.appendChild(this.canvas);
-        this.rootElement = div;
+        this.makeUI(width, height);
 
         const gl = this.canvas.getContext("webgl2")
         if(gl === null) {
@@ -456,6 +446,28 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         return this.framerate;
     }
 
+    private makeUI(canvasWidth: number, canvasHeight: number): void {
+        let div = document.createElement("div");
+
+        this.fpsCounter = document.createElement("p");
+        div.appendChild(this.fpsCounter);
+
+        this.ui.pauseButton = document.createElement("input");
+        this.ui.pauseButton.type = "checkbox";
+        div.appendChild(this.ui.pauseButton);
+
+        this.canvas = document.createElement("canvas");
+        this.canvas.width = canvasWidth;
+        this.canvas.height = canvasHeight;
+
+        div.appendChild(this.canvas);
+        this.rootElement = div;
+    }
+
+    public isPaused(): boolean {
+        return this.ui.pauseButton.checked;
+    }
+
     /**
      * Will run indefinitely in it's own loop, updating the canvas
      * This function should be non-blocking
@@ -482,7 +494,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
             }
 
             const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
-            if( (timeSinceCaUpdate/1000.0) >= (1.0/caUpdateRate) ) {
+            if( (timeSinceCaUpdate/1000.0) >= (1.0/caUpdateRate) && !that.isPaused()) {
                 that.update();
                 lastCaUpdateStamp = timestamp;
             }
@@ -656,4 +668,10 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
 
     private voxelMesh: VoxelMesh;
     private camera: Camera;
+
+    private ui: {
+        pauseButton: HTMLInputElement;
+    } = {
+        pauseButton: null
+    };
 }
