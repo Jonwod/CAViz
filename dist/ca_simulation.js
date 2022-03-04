@@ -3,14 +3,20 @@ import { makeProgram } from "./gl_helpers.js";
 import { VoxelMesh } from "./voxel_mesh.js";
 import { Camera } from "./camera.js";
 import { TotalisticTransitionRule } from "./transition_rule.js";
+import { NumberDisplay } from "./ui/number_display.js";
 export class CASimulation {
     constructor(ca, initialConfiguration, width, height) {
         this.drawFlat = false;
         this.ui = {
             pauseButton: null
         };
+        this.stats = {
+            capture: true,
+            liveCells: 0,
+        };
         const worldSize = initialConfiguration.getSize();
         this.worldSize = worldSize;
+        this.cellularAutomaton = ca;
         this.makeUI(width, height);
         const gl = this.canvas.getContext("webgl2");
         if (gl === null) {
@@ -25,12 +31,6 @@ export class CASimulation {
         const numCells = initialConfiguration.getData().length;
         const textureSize = Math.ceil(Math.sqrt(numCells));
         this.textureSize = textureSize;
-        let drawModeButton = document.createElement("button");
-        drawModeButton.innerText = "Draw mode";
-        drawModeButton.addEventListener("click", () => {
-            this.drawFlat = !this.drawFlat;
-        });
-        this.rootElement.appendChild(drawModeButton);
         this.drawFlat = ca.getNumDimensions() < 3;
         {
             const level = 0;
@@ -337,15 +337,33 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
     }
     makeUI(canvasWidth, canvasHeight) {
         let div = document.createElement("div");
-        this.fpsCounter = document.createElement("p");
-        div.appendChild(this.fpsCounter);
+        div.style.display = 'flex';
+        div.style.flexDirection = 'row';
+        div.style.justifyContent = 'center';
+        div.style.alignItems = 'center';
+        let sidebar = document.createElement("div");
+        div.appendChild(sidebar);
+        let mainContent = document.createElement("div");
+        div.appendChild(mainContent);
+        let drawModeButton = document.createElement("button");
+        drawModeButton.innerText = "Draw mode";
+        drawModeButton.addEventListener("click", () => {
+            this.drawFlat = !this.drawFlat;
+        });
+        sidebar.appendChild(drawModeButton);
+        this.fpsCounter = new NumberDisplay(0);
+        sidebar.appendChild(this.fpsCounter.getHTML());
+        this.popDensityDisplay = new NumberDisplay(2);
+        sidebar.appendChild(this.popDensityDisplay.getHTML());
+        this.liveCellsDisplay = new NumberDisplay(0);
+        sidebar.appendChild(this.liveCellsDisplay.getHTML());
         this.ui.pauseButton = document.createElement("input");
         this.ui.pauseButton.type = "checkbox";
-        div.appendChild(this.ui.pauseButton);
+        sidebar.appendChild(this.ui.pauseButton);
         this.canvas = document.createElement("canvas");
         this.canvas.width = canvasWidth;
         this.canvas.height = canvasHeight;
-        div.appendChild(this.canvas);
+        mainContent.appendChild(this.canvas);
         this.rootElement = div;
     }
     isPaused() {
@@ -366,7 +384,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
                 that.draw();
                 lastDrawStamp = timestamp;
                 that.framerate = (1.0 / timeSinceDraw) * 1000;
-                that.fpsCounter.innerHTML = that.framerate.toFixed(2).toString();
+                that.fpsCounter.setValue(that.framerate);
             }
             const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
             if ((timeSinceCaUpdate / 1000.0) >= (1.0 / caUpdateRate) && !that.isPaused()) {
@@ -442,6 +460,31 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         gl.bindVertexArray(this.vao);
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
         gl.bindVertexArray(null);
+        if (this.stats) {
+            let pixels = new Uint32Array(this.textureSize * this.textureSize * 4);
+            gl.readPixels(0, 0, this.textureSize, this.textureSize, gl.RGBA_INTEGER, gl.UNSIGNED_INT, pixels);
+            this.updateStats(pixels);
+        }
         this.swapBuffers();
+    }
+    getNumCellsInWorld() {
+        return Math.pow(this.worldSize, this.cellularAutomaton.getNumDimensions());
+    }
+    setStatsEnabled(yes) {
+        this.stats.capture = yes;
+    }
+    getLiveCells() {
+        return this.stats.capture ? this.stats.liveCells : null;
+    }
+    getPopDensity() {
+        return this.stats.capture ? this.stats.liveCells / this.getNumCellsInWorld() : null;
+    }
+    updateStats(worldTexture) {
+        this.stats.liveCells = 0;
+        for (let i = 0; i < worldTexture.length; ++i) {
+            this.stats.liveCells += worldTexture[i];
+        }
+        this.liveCellsDisplay.setValue(this.stats.liveCells);
+        this.popDensityDisplay.setValue(this.stats.liveCells / this.getNumCellsInWorld());
     }
 }
