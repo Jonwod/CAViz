@@ -6,6 +6,7 @@ import { TotalisticTransitionRule } from "./transition_rule.js";
 import { NumberDisplay } from "./ui/number_display.js";
 export class CASimulation {
     constructor(ca, initialConfiguration, width, height) {
+        this.terminated = false;
         this.drawFlat = false;
         this.ui = {
             pauseButton: null
@@ -351,10 +352,23 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
             this.drawFlat = !this.drawFlat;
         });
         sidebar.appendChild(drawModeButton);
+        let statTable = document.createElement("table");
+        let row = statTable.insertRow();
+        let cell = row.insertCell();
+        let label = document.createElement("p");
+        label.innerHTML = "";
+        cell.appendChild(label);
+        label.innerHTML = "FPS:";
         this.fpsCounter = new NumberDisplay(0);
-        sidebar.appendChild(this.fpsCounter.getHTML());
+        cell.appendChild(this.fpsCounter.getHTML());
+        label = document.createElement('p');
+        label.innerHTML = "Population Density:";
+        row = statTable.insertRow();
+        cell = row.insertCell();
         this.popDensityDisplay = new NumberDisplay(2);
-        sidebar.appendChild(this.popDensityDisplay.getHTML());
+        cell.appendChild(this.popDensityDisplay.getHTML());
+        label = document.createElement('p');
+        label.innerHTML = "Live Cells:";
         this.liveCellsDisplay = new NumberDisplay(0);
         sidebar.appendChild(this.liveCellsDisplay.getHTML());
         this.ui.pauseButton = document.createElement("input");
@@ -391,9 +405,14 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
                 that.update();
                 lastCaUpdateStamp = timestamp;
             }
-            window.requestAnimationFrame(tick);
+            if (!that.terminated) {
+                window.requestAnimationFrame(tick);
+            }
         }
         window.requestAnimationFrame(tick);
+    }
+    terminate() {
+        this.terminated = true;
     }
     draw() {
         if (this.drawFlat) {

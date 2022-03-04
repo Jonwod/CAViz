@@ -106,11 +106,11 @@ class SimState extends State {
         this.initConfig = initConfig;
     }
     onEnter() {
-        let sim = new CASimulation(this.ca, this.initConfig, 1000, 1000);
+        this.sim = new CASimulation(this.ca, this.initConfig, 1000, 1000);
         let div = document.createElement("div");
         let topdiv = document.getElementById("topdiv");
         this.myHTML = div;
-        div.appendChild(sim.getHTML());
+        div.appendChild(this.sim.getHTML());
         let constructionButton = document.createElement("button");
         constructionButton.innerText = "New CA";
         constructionButton.addEventListener("click", () => {
@@ -118,10 +118,13 @@ class SimState extends State {
         });
         topdiv.appendChild(constructionButton);
         document.getElementsByTagName("body")[0].appendChild(this.myHTML);
-        sim.run();
+        this.sim.run();
+        this.newCAButton = constructionButton;
     }
     onExit() {
         this.myHTML.remove();
+        this.newCAButton.remove();
+        this.sim.terminate();
     }
 }
 class TestInstancedRender extends State {
