@@ -5,6 +5,7 @@ import { makeProgram } from "./gl_helpers.js";
 import { VoxelMesh } from "./voxel_mesh.js";
 import { Camera } from "./camera.js";
 import {TransitionRule, TotalisticTransitionRule} from "./transition_rule.js";
+import {NumberDisplay} from "./ui/number_display.js";
 declare var mat4: any;
 
 /**
@@ -17,11 +18,14 @@ export class CASimulation {
     protected gl: WebGL2RenderingContext;
     protected worldSize: number;
     private framerate: number;
-    private fpsCounter: HTMLParagraphElement;
+    private fpsCounter: NumberDisplay;
+    private popDensityDisplay: NumberDisplay;
+    private liveCellsDisplay:  NumberDisplay;
 
     constructor(ca: CellularAutomaton, initialConfiguration: Configuration, width: number, height: number) {
         const worldSize = initialConfiguration.getSize();
         this.worldSize = worldSize;
+        this.cellularAutomaton = ca;
 
         this.makeUI(width, height);
 
@@ -41,12 +45,6 @@ export class CASimulation {
         const textureSize = Math.ceil(Math.sqrt(numCells));
         this.textureSize = textureSize;
 
-        let drawModeButton = document.createElement("button");
-        drawModeButton.innerText = "Draw mode";
-        drawModeButton.addEventListener("click", () => {
-            this.drawFlat = !this.drawFlat;
-        });
-        this.rootElement.appendChild(drawModeButton);
         this.drawFlat = ca.getNumDimensions() < 3;
 
         {
@@ -100,7 +98,7 @@ export class CASimulation {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         
-                        // Create and bind the framebuffer
+            // Create and bind the framebuffer
             // After binding the framebuffer, draw calls will draw to it
             this.frameBuffer = gl.createFramebuffer();
             gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer); 
@@ -448,19 +446,42 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
 
     private makeUI(canvasWidth: number, canvasHeight: number): void {
         let div = document.createElement("div");
+        div.style.display = 'flex';
+        div.style.flexDirection = 'row';
+        div.style.justifyContent = 'center';
+        div.style.alignItems = 'center';
 
-        this.fpsCounter = document.createElement("p");
-        div.appendChild(this.fpsCounter);
+        let sidebar = document.createElement("div");
+        div.appendChild(sidebar);
+        let mainContent = document.createElement("div");
+        div.appendChild(mainContent);
+
+        let drawModeButton = document.createElement("button");
+        drawModeButton.innerText = "Draw mode";
+        drawModeButton.addEventListener("click", () => {
+            this.drawFlat = !this.drawFlat;
+        });
+        sidebar.appendChild(drawModeButton);
+
+        this.fpsCounter = new NumberDisplay(0);
+        sidebar.appendChild(this.fpsCounter.getHTML());
+
+        this.popDensityDisplay = new NumberDisplay(2);
+        sidebar.appendChild(this.popDensityDisplay.getHTML());
+        this.liveCellsDisplay = new NumberDisplay(0);
+        sidebar.appendChild(this.liveCellsDisplay.getHTML());
 
         this.ui.pauseButton = document.createElement("input");
         this.ui.pauseButton.type = "checkbox";
-        div.appendChild(this.ui.pauseButton);
+        sidebar.appendChild(this.ui.pauseButton);
 
         this.canvas = document.createElement("canvas");
         this.canvas.width = canvasWidth;
         this.canvas.height = canvasHeight;
+        mainContent.appendChild(this.canvas);
+        
+        // document.createElement("");
 
-        div.appendChild(this.canvas);
         this.rootElement = div;
     }
 
@@ -490,7 +511,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
                 that.draw();
                 lastDrawStamp = timestamp;
                 that.framerate = (1.0 / timeSinceDraw) * 1000;
-                that.fpsCounter.innerHTML = that.framerate.toFixed(2).toString();
+                that.fpsCounter.setValue(that.framerate);
             }
 
             const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
@@ -612,6 +633,12 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
         gl.bindVertexArray(null);
 
+        if(this.stats) {
+            let pixels: Uint32Array = new Uint32Array(this.textureSize * this.textureSize * 4);
+            gl.readPixels(0, 0, this.textureSize, this.textureSize, gl.RGBA_INTEGER, gl.UNSIGNED_INT, pixels);
+            this.updateStats(pixels);
+        }
+
         this.swapBuffers();
     }
 
@@ -674,4 +701,43 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
     } = {
         pauseButton: null
     };
+
+    public getNumCellsInWorld(): number {
+        return this.worldSize ** this.cellularAutomaton.getNumDimensions();
+    }
+
+    // ~~~~~~ STATS FUNCTIONS ~~~~~~
+    public setStatsEnabled(yes: boolean): void {
+        this.stats.capture = yes;
+    }
+    // The stats functions below will return null unless
+    // stats are enabled
+
+    public getLiveCells(): number {
+        return this.stats.capture ? this.stats.liveCells : null;
+    }
+
+    public getPopDensity(): number {
+        return this.stats.capture ? this.stats.liveCells / this.getNumCellsInWorld() : null;
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    private updateStats(worldTexture: Uint32Array) {
+        this.stats.liveCells = 0;
+        for(let i = 0; i < worldTexture.length; ++i) {
+            this.stats.liveCells += worldTexture[i];
+        }
+        this.liveCellsDisplay.setValue(this.stats.liveCells);
+        this.popDensityDisplay.setValue(this.stats.liveCells / this.getNumCellsInWorld());
+    }
+
+    private stats: {
+        capture: boolean,
+        liveCells: number, 
+    } = {
+        capture: true,
+        liveCells: 0,
+    };
+
+    private cellularAutomaton: CellularAutomaton;
 }

@@ -187,14 +187,15 @@ class SimState extends State {
         let sim: CASimulation = new CASimulation(this.ca, this.initConfig, 1000, 1000);
 
         let div = document.createElement("div");
-        this.myHTML = div; 
+        let topdiv = document.getElementById("topdiv");
+        this.myHTML = div;
         div.appendChild(sim.getHTML());
         let constructionButton = document.createElement("button");
         constructionButton.innerText = "New CA";
         constructionButton.addEventListener("click", () => {
             appStateMachine.setState(new ConstructionState());
         });
-        div.appendChild(constructionButton);
+        topdiv.appendChild(constructionButton);
         document.getElementsByTagName("body")[0].appendChild(this.myHTML);
         sim.run();
     }
