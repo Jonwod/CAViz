@@ -463,13 +463,34 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         });
         sidebar.appendChild(drawModeButton);
 
+
+        let statTable = document.createElement("table");
+
+        let row = statTable.insertRow();
+        let cell = row.insertCell();
+
+        let label = document.createElement("p");
+        label.innerHTML = "";
+        cell.appendChild(label);
+
+        label.innerHTML = "FPS:";
+
         this.fpsCounter = new NumberDisplay(0);
-        sidebar.appendChild(this.fpsCounter.getHTML());
+        cell.appendChild(this.fpsCounter.getHTML());
+
+        label = document.createElement('p');
+        label.innerHTML = "Population Density:";
+        row = statTable.insertRow();
+        cell = row.insertCell();
 
         this.popDensityDisplay = new NumberDisplay(2);
-        sidebar.appendChild(this.popDensityDisplay.getHTML());
+        cell.appendChild(this.popDensityDisplay.getHTML());
+        label = document.createElement('p');
+
+        label.innerHTML = "Live Cells:";
         this.liveCellsDisplay = new NumberDisplay(0);
         sidebar.appendChild(this.liveCellsDisplay.getHTML());
+        
 
         this.ui.pauseButton = document.createElement("input");
         this.ui.pauseButton.type = "checkbox";
@@ -520,9 +541,19 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
                 lastCaUpdateStamp = timestamp;
             }
 
-            window.requestAnimationFrame(tick);
+            if(!that.terminated) {
+                window.requestAnimationFrame(tick);
+            }
         }
         window.requestAnimationFrame(tick);
+    }
+
+
+    private terminated: boolean = false;
+
+    // Permanently stops the simulation from updating
+    public terminate(): void {
+        this.terminated = true;
     }
 
     protected draw(): void {

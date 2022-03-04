@@ -184,12 +184,12 @@ class SimState extends State {
     }
 
     onEnter(): void {
-        let sim: CASimulation = new CASimulation(this.ca, this.initConfig, 1000, 1000);
+        this.sim = new CASimulation(this.ca, this.initConfig, 1000, 1000);
 
         let div = document.createElement("div");
         let topdiv = document.getElementById("topdiv");
         this.myHTML = div;
-        div.appendChild(sim.getHTML());
+        div.appendChild(this.sim.getHTML());
         let constructionButton = document.createElement("button");
         constructionButton.innerText = "New CA";
         constructionButton.addEventListener("click", () => {
@@ -197,16 +197,22 @@ class SimState extends State {
         });
         topdiv.appendChild(constructionButton);
         document.getElementsByTagName("body")[0].appendChild(this.myHTML);
-        sim.run();
+        this.sim.run();
+
+        this.newCAButton = constructionButton;
     }
 
     onExit(): void {
         this.myHTML.remove();
+        this.newCAButton.remove();
+        this.sim.terminate();
     }
 
     private myHTML: HTMLElement;
     private ca: CellularAutomaton;
     private initConfig: Configuration;
+    private newCAButton: HTMLElement;
+    private sim: CASimulation;
 }
 
 class TestInstancedRender extends State {
