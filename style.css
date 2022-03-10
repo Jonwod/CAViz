@@ -1,0 +1,23 @@
+body {
+    background-color:rgb(95, 144, 156);
+}
+
+.pause_button {
+    display: none
+}
+
+.pause_button + label {
+    background:url('images/pause.png') no-repeat;
+    height: 16px;
+    width: 16px;
+    display:inline-block;
+    padding: 0 0 0 0px;
+}
+
+.pause_button:checked + label {
+    background:url('images/pause.png') no-repeat;
+    height: 16px;
+    width: 16px;
+    display:inline-block;
+    padding: 0 0 0 0px;
+}

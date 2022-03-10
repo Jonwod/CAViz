@@ -6,6 +6,7 @@ import { VoxelMesh } from "./voxel_mesh.js";
 import { Camera } from "./camera.js";
 import {TransitionRule, TotalisticTransitionRule} from "./transition_rule.js";
 import {NumberDisplay} from "./ui/number_display.js";
+import { ToggleButton } from "./ui/toggle_button.js";
 declare var mat4: any;
 
 /**
@@ -445,7 +446,9 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
     }
 
     private makeUI(canvasWidth: number, canvasHeight: number): void {
+        let topDiv = document.createElement("div");
         let div = document.createElement("div");
+        topDiv.appendChild(div);
         div.style.display = 'flex';
         div.style.flexDirection = 'row';
         div.style.justifyContent = 'center';
@@ -491,11 +494,17 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         this.liveCellsDisplay = new NumberDisplay(0);
         sidebar.appendChild(this.liveCellsDisplay.getHTML());
 
-        this.ui.pauseButton = document.createElement("input");
-        this.ui.pauseButton.type = "checkbox";
-        this.ui.pauseButton.classList.add("pause_button");
-        // this.ui.pauseButton.;
-        sidebar.appendChild(this.ui.pauseButton);
+        // this.ui.pauseButton = document.createElement("input");
+        // this.ui.pauseButton.type = "checkbox";
+        // this.ui.pauseButton.classList.add("pause_button");
+        // // this.ui.pauseButton.;
+        // sidebar.appendChild(this.ui.pauseButton);
+
+        let tog = new ToggleButton("images/pause.png", 
+                                    "images/play-button.png",
+                                    {x: 64, y: 64});
+        this.ui.pauseButton = tog;
+        sidebar.appendChild(tog.getHTML());
 
         this.canvas = document.createElement("canvas");
         this.canvas.width = canvasWidth;
@@ -504,11 +513,19 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         
         // document.createElement("");
 
-        this.rootElement = div;
+        this.rootElement = topDiv;
+
+        // Attributation
+        let attribDiv = document.createElement("div");
+        attribDiv.innerHTML += `<a href="https://www.flaticon.com/free-icons/pause" title="pause icons">Pause icons created by bqlqn - Flaticon</a>
+        <br/>
+        <a href="https://www.flaticon.com/free-icons/video" title="video icons">Video icons created by Freepik - Flaticon</a>`;
+
+        topDiv.appendChild(attribDiv);
     }
 
     public isPaused(): boolean {
-        return this.ui.pauseButton.checked;
+        return this.ui.pauseButton.getState();
     }
 
     /**
@@ -729,7 +746,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
     private camera: Camera;
 
     private ui: {
-        pauseButton: HTMLInputElement;
+        pauseButton: ToggleButton;
     } = {
         pauseButton: null
     };
