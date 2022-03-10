@@ -490,10 +490,11 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         label.innerHTML = "Live Cells:";
         this.liveCellsDisplay = new NumberDisplay(0);
         sidebar.appendChild(this.liveCellsDisplay.getHTML());
-        
 
         this.ui.pauseButton = document.createElement("input");
         this.ui.pauseButton.type = "checkbox";
+        this.ui.pauseButton.classList.add("pause_button");
+        // this.ui.pauseButton.;
         sidebar.appendChild(this.ui.pauseButton);
 
         this.canvas = document.createElement("canvas");

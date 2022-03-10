@@ -1,7 +1,8 @@
 import { assert } from "../assert.js";
 
 export class NumberInput {
-    constructor(defaultValue: number, integer: boolean = false, min: number=null, max: number=null) {
+    constructor(defaultValue: number, integer: boolean = false,
+                onChange: (ni: NumberInput) => void = null, min: number=null, max: number=null) {
         if(min !== null  &&  max !== null) {
             assert(max >= min);
         }
@@ -20,6 +21,9 @@ export class NumberInput {
             // TODO: better validation and handling
             assert(newVal !== null && typeof(newVal) !== 'undefined');
             that.value = newVal;
+            if(onChange) {
+                onChange(that);
+            }
         });
         this.inputElem.value = defaultValue.toString();
         this.value = defaultValue;
@@ -36,4 +40,5 @@ export class NumberInput {
     private inputElem: HTMLInputElement;
 
     private value: number;
+    // private onChange: (ni: NumberInput) => void;
 }

@@ -19,6 +19,9 @@ class ConstructionState extends State {
     onEnter(): void {
         let div = document.createElement("div");
 
+        let gl = document.createElement("canvas").getContext("webgl");
+        this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+
         // let button = document.createElement("button");
         // button.innerHTML = "2D Cellular Automaton";
         // button.addEventListener("click", () => {
@@ -78,10 +81,10 @@ class ConstructionState extends State {
             div.appendChild(dimensionalityDiv);
         }
 
-        let stayAliveInputLow = new NumberInput(2, true, 0);
-        let stayAliveInputHigh = new NumberInput(3, true, 0);
-        let reproduceInputLow = new NumberInput(3, true, 0);
-        let reproduceInputHigh = new NumberInput(3, true, 0);
+        this.ui.stayAliveInputLow = new NumberInput(2, true, () => {that.revalidate();}, 0);
+        this.ui.stayAliveInputHigh = new NumberInput(3, true, () => {that.revalidate();}, 0);
+        this.ui.reproduceInputLow = new NumberInput(3, true, () => {that.revalidate();}, 0);
+        this.ui.reproduceInputHigh = new NumberInput(3, true, () => {that.revalidate();}, 0);
 
         {
             let totalisticParamsDiv = document.createElement("div");
@@ -93,8 +96,8 @@ class ConstructionState extends State {
             aliveRangeExpl.innerHTML = "(Live cell will remain alive when the number of live neighbours falls in this range)";
             totalisticParamsDiv.appendChild(aliveRangeExpl);
         
-            totalisticParamsDiv.appendChild(stayAliveInputLow.html());
-            totalisticParamsDiv.appendChild(stayAliveInputHigh.html());
+            totalisticParamsDiv.appendChild(this.ui.stayAliveInputLow.html());
+            totalisticParamsDiv.appendChild(this.ui.stayAliveInputHigh.html());
 
             let reproduceRangeLabel = document.createElement("p");
             reproduceRangeLabel.innerHTML = "<b>Reproduce range</b>";
@@ -104,14 +107,14 @@ class ConstructionState extends State {
             reproduceRangeExpl.innerHTML = "(Dead cell becomes alive when the number of live neighbours falls in this range)";
             totalisticParamsDiv.appendChild(reproduceRangeExpl);
 
-            totalisticParamsDiv.appendChild(reproduceInputLow.html());
-            totalisticParamsDiv.appendChild(reproduceInputHigh.html());
+            totalisticParamsDiv.appendChild(this.ui.reproduceInputLow.html());
+            totalisticParamsDiv.appendChild(this.ui.reproduceInputHigh.html());
 
             div.appendChild(totalisticParamsDiv);
         }
 
-        let worldSizeInput = new NumberInput(100, true, 0);
-        let popDensityInput = new NumberInput(0.34, false, 0, 1);
+        this.ui.worldSizeInput = new NumberInput(100, true, () => {that.revalidate();}, 0);
+        this.ui.popDensityInput = new NumberInput(0.34, false, () => {that.revalidate();}, 0, 1);
 
         {
             let configDiv  = document.createElement("div");
@@ -120,36 +123,137 @@ class ConstructionState extends State {
             worldSizeLabel.innerHTML = "<b>World size:</b>";
             configDiv.appendChild(worldSizeLabel);
 
-            configDiv.appendChild(worldSizeInput.html());
+            configDiv.appendChild(this.ui.worldSizeInput.html());
 
             let popDensityLabel = document.createElement("p");
             popDensityLabel.innerHTML = "<b>Initial population density:</b>";
             configDiv.appendChild(popDensityLabel);
 
-            configDiv.appendChild(popDensityInput.html());
+            configDiv.appendChild(this.ui.popDensityInput.html());
 
             div.appendChild(configDiv);
         }
 
-        let confirmButton = document.createElement("button");
-        confirmButton.innerText = "Simulate";
-        confirmButton.addEventListener("click", () => {
+        this.confirmButton = document.createElement("button");
+        this.confirmButton.innerText = "Simulate";
+        this.confirmButton.addEventListener("click", () => {
             // TODO: Parameterize no. states
             const numStates = 2;
 
-            let transitionRule = transitionRuleFromBaysCoding(that.dimensions, 
-                new Range(stayAliveInputLow.getValue(), stayAliveInputHigh.getValue()), 
-                new Range(reproduceInputLow.getValue(), reproduceInputHigh.getValue())
-            );
+            let transitionRule = that.makeTransitionRule();
 
             let ca = new CellularAutomaton(numStates, that.dimensions, transitionRule);
-            let conf = Configuration.makeRandom(that.dimensions, worldSizeInput.getValue(), numStates, popDensityInput.getValue());
+            let conf = Configuration.makeRandom(that.dimensions, this.ui.worldSizeInput.getValue(), numStates, this.ui.popDensityInput.getValue());
             appStateMachine.setState(new SimState(ca, conf));
         });
-        div.appendChild(confirmButton);
+        div.appendChild(this.confirmButton);
+
+        this.errorBox = document.createElement('div');
+        div.appendChild(this.errorBox);
+        
+        // div.appendChild();
 
         this.myHTML = div;
+        
         document.getElementsByTagName("body")[0].appendChild(this.myHTML);
+    }
+
+    private ui: {
+        stayAliveInputLow: NumberInput,
+        stayAliveInputHigh: NumberInput,
+        reproduceInputLow: NumberInput,
+        reproduceInputHigh: NumberInput,
+        worldSizeInput: NumberInput,
+        popDensityInput: NumberInput
+    } = {
+        stayAliveInputLow: null,
+        stayAliveInputHigh: null,
+        reproduceInputLow: null,
+        reproduceInputHigh: null,
+        worldSizeInput: null,
+        popDensityInput: null
+    };
+
+    private makeTransitionRule(): TransitionRule {
+        return transitionRuleFromBaysCoding(this.dimensions, 
+            new Range(this.ui.stayAliveInputLow.getValue(), this.ui.stayAliveInputHigh.getValue()), 
+            new Range(this.ui.reproduceInputLow.getValue(), this.ui.reproduceInputHigh.getValue())
+        );
+    }
+
+    private revalidate() {
+        let errorStrings = this.getInputErrors();
+        if(errorStrings.length > 0) {
+            this.confirmButton.disabled = true;
+        } else {
+            this.confirmButton.disabled = false;
+        }
+
+        while(this.errorBox.firstChild) {
+            this.errorBox.removeChild(this.errorBox.lastChild);
+        }
+
+        let errorList = document.createElement("ul");
+        errorStrings.forEach(s => {
+            let e = document.createElement('li');
+            e.classList.add("errorText");
+            e.innerHTML = s;
+            e.style.color = 'red';
+            errorList.appendChild(e);
+        });
+        this.errorBox.appendChild(errorList);
+    }
+
+    /**
+     * Returns any problems with the input, as an array of Strings.
+     * Empty array indicates input is valid.
+     */
+    private getInputErrors(): string[] {
+        let errors: string[] = [];
+
+        let prospectiveTransitionRule = this.makeTransitionRule();
+        let nNeighbours = prospectiveTransitionRule.getNeigbourhood().getNumNeighbours();
+
+        if(this.ui.stayAliveInputLow.getValue() < 0) {
+            errors.push("The start of the stay alive range cannot be negative");
+        }
+
+        if(this.ui.stayAliveInputHigh.getValue() > nNeighbours) {
+            errors.push("The end of the stay alive range cannot be greater than " + 
+            nNeighbours + " as this is the maximum possible number of live neighbours.");
+        }
+
+        if(this.ui.stayAliveInputLow.getValue() > this.ui.stayAliveInputHigh.getValue()) {
+            errors.push("The start of the stay alive range must be less than or equal to the end.");
+        }
+
+        if(this.ui.stayAliveInputLow.getValue() < 0) {
+            errors.push("The start of the reproduce range cannot be negative");
+        }
+
+        if(this.ui.reproduceInputLow.getValue() > this.ui.reproduceInputHigh.getValue()) {
+            errors.push("The start of the reproduce range must be less than or equal to the end.");
+        }
+
+        if(this.ui.reproduceInputHigh.getValue() > nNeighbours) {
+            errors.push("The end of the reproduce range cannot be greater than " + 
+            nNeighbours + " as this is the maximum possible number of live neighbours.");
+        }
+
+        const pd = this.ui.popDensityInput.getValue();
+        if(pd < 0  ||  pd > 1) {
+            errors.push("Population density must be in the range 0-1");
+        }
+
+        // Determine min/max world size and verify
+        const maxCells = this.maxTextureSize ** 2;
+        const maxWorldSize = Math.floor(Math.pow(maxCells, 1/this.dimensions));
+        if(this.ui.worldSizeInput.getValue() > maxWorldSize) {
+            errors.push("World size too large. Max supported world size for a " 
+            + this.dimensions + "D world is " + maxWorldSize + " on your system.");
+        }
+
+        return errors;
     }
 
     // if(this.threeD) {
@@ -174,6 +278,10 @@ class ConstructionState extends State {
     }
     private myHTML: HTMLElement;
     private dimensions: number;
+    private errorBox: HTMLDivElement;
+    // private errors: HTMLElement[];
+    private confirmButton: HTMLButtonElement;
+    private maxTextureSize: number;
 }
 
 class SimState extends State {
