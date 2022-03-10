@@ -25,7 +25,7 @@ export class NumberInput {
         this.inputElem.value = defaultValue.toString();
         this.value = defaultValue;
     }
-    html() {
+    getHTML() {
         return this.inputElem;
     }
     getValue() {

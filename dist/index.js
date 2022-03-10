@@ -23,7 +23,6 @@ class ConstructionState extends State {
         let div = document.createElement("div");
         let gl = document.createElement("canvas").getContext("webgl");
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-        console.log("Max texture size: " + this.maxTextureSize);
         let that = this;
         {
             let dimensionalityDiv = document.createElement("div");
@@ -70,16 +69,16 @@ class ConstructionState extends State {
             let aliveRangeExpl = document.createElement("p");
             aliveRangeExpl.innerHTML = "(Live cell will remain alive when the number of live neighbours falls in this range)";
             totalisticParamsDiv.appendChild(aliveRangeExpl);
-            totalisticParamsDiv.appendChild(this.ui.stayAliveInputLow.html());
-            totalisticParamsDiv.appendChild(this.ui.stayAliveInputHigh.html());
+            totalisticParamsDiv.appendChild(this.ui.stayAliveInputLow.getHTML());
+            totalisticParamsDiv.appendChild(this.ui.stayAliveInputHigh.getHTML());
             let reproduceRangeLabel = document.createElement("p");
             reproduceRangeLabel.innerHTML = "<b>Reproduce range</b>";
             totalisticParamsDiv.appendChild(reproduceRangeLabel);
             let reproduceRangeExpl = document.createElement("p");
             reproduceRangeExpl.innerHTML = "(Dead cell becomes alive when the number of live neighbours falls in this range)";
             totalisticParamsDiv.appendChild(reproduceRangeExpl);
-            totalisticParamsDiv.appendChild(this.ui.reproduceInputLow.html());
-            totalisticParamsDiv.appendChild(this.ui.reproduceInputHigh.html());
+            totalisticParamsDiv.appendChild(this.ui.reproduceInputLow.getHTML());
+            totalisticParamsDiv.appendChild(this.ui.reproduceInputHigh.getHTML());
             div.appendChild(totalisticParamsDiv);
         }
         this.ui.worldSizeInput = new NumberInput(100, true, () => { that.revalidate(); }, 0);
@@ -89,11 +88,11 @@ class ConstructionState extends State {
             let worldSizeLabel = document.createElement("p");
             worldSizeLabel.innerHTML = "<b>World size:</b>";
             configDiv.appendChild(worldSizeLabel);
-            configDiv.appendChild(this.ui.worldSizeInput.html());
+            configDiv.appendChild(this.ui.worldSizeInput.getHTML());
             let popDensityLabel = document.createElement("p");
             popDensityLabel.innerHTML = "<b>Initial population density:</b>";
             configDiv.appendChild(popDensityLabel);
-            configDiv.appendChild(this.ui.popDensityInput.html());
+            configDiv.appendChild(this.ui.popDensityInput.getHTML());
             div.appendChild(configDiv);
         }
         this.confirmButton = document.createElement("button");

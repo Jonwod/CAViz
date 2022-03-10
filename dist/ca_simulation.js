@@ -4,6 +4,7 @@ import { VoxelMesh } from "./voxel_mesh.js";
 import { Camera } from "./camera.js";
 import { TotalisticTransitionRule } from "./transition_rule.js";
 import { NumberDisplay } from "./ui/number_display.js";
+import { ToggleButton } from "./ui/toggle_button.js";
 export class CASimulation {
     constructor(ca, initialConfiguration, width, height) {
         this.terminated = false;
@@ -337,7 +338,9 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         return this.framerate;
     }
     makeUI(canvasWidth, canvasHeight) {
+        let topDiv = document.createElement("div");
         let div = document.createElement("div");
+        topDiv.appendChild(div);
         div.style.display = 'flex';
         div.style.flexDirection = 'row';
         div.style.justifyContent = 'center';
@@ -371,18 +374,22 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         label.innerHTML = "Live Cells:";
         this.liveCellsDisplay = new NumberDisplay(0);
         sidebar.appendChild(this.liveCellsDisplay.getHTML());
-        this.ui.pauseButton = document.createElement("input");
-        this.ui.pauseButton.type = "checkbox";
-        this.ui.pauseButton.classList.add("pause_button");
-        sidebar.appendChild(this.ui.pauseButton);
+        let tog = new ToggleButton("images/pause.png", "images/play-button.png", { x: 64, y: 64 });
+        this.ui.pauseButton = tog;
+        sidebar.appendChild(tog.getHTML());
         this.canvas = document.createElement("canvas");
         this.canvas.width = canvasWidth;
         this.canvas.height = canvasHeight;
         mainContent.appendChild(this.canvas);
-        this.rootElement = div;
+        this.rootElement = topDiv;
+        let attribDiv = document.createElement("div");
+        attribDiv.innerHTML += `<a href="https://www.flaticon.com/free-icons/pause" title="pause icons">Pause icons created by bqlqn - Flaticon</a>
+        <br/>
+        <a href="https://www.flaticon.com/free-icons/video" title="video icons">Video icons created by Freepik - Flaticon</a>`;
+        topDiv.appendChild(attribDiv);
     }
     isPaused() {
-        return this.ui.pauseButton.checked;
+        return this.ui.pauseButton.getState();
     }
     run() {
         const drawRate = 60.0;
