@@ -96,8 +96,8 @@ class ConstructionState extends State {
             aliveRangeExpl.innerHTML = "(Live cell will remain alive when the number of live neighbours falls in this range)";
             totalisticParamsDiv.appendChild(aliveRangeExpl);
         
-            totalisticParamsDiv.appendChild(this.ui.stayAliveInputLow.html());
-            totalisticParamsDiv.appendChild(this.ui.stayAliveInputHigh.html());
+            totalisticParamsDiv.appendChild(this.ui.stayAliveInputLow.getHTML());
+            totalisticParamsDiv.appendChild(this.ui.stayAliveInputHigh.getHTML());
 
             let reproduceRangeLabel = document.createElement("p");
             reproduceRangeLabel.innerHTML = "<b>Reproduce range</b>";
@@ -107,8 +107,8 @@ class ConstructionState extends State {
             reproduceRangeExpl.innerHTML = "(Dead cell becomes alive when the number of live neighbours falls in this range)";
             totalisticParamsDiv.appendChild(reproduceRangeExpl);
 
-            totalisticParamsDiv.appendChild(this.ui.reproduceInputLow.html());
-            totalisticParamsDiv.appendChild(this.ui.reproduceInputHigh.html());
+            totalisticParamsDiv.appendChild(this.ui.reproduceInputLow.getHTML());
+            totalisticParamsDiv.appendChild(this.ui.reproduceInputHigh.getHTML());
 
             div.appendChild(totalisticParamsDiv);
         }
@@ -123,13 +123,13 @@ class ConstructionState extends State {
             worldSizeLabel.innerHTML = "<b>World size:</b>";
             configDiv.appendChild(worldSizeLabel);
 
-            configDiv.appendChild(this.ui.worldSizeInput.html());
+            configDiv.appendChild(this.ui.worldSizeInput.getHTML());
 
             let popDensityLabel = document.createElement("p");
             popDensityLabel.innerHTML = "<b>Initial population density:</b>";
             configDiv.appendChild(popDensityLabel);
 
-            configDiv.appendChild(this.ui.popDensityInput.html());
+            configDiv.appendChild(this.ui.popDensityInput.getHTML());
 
             div.appendChild(configDiv);
         }

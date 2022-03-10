@@ -29,7 +29,7 @@ export class NumberInput {
         this.value = defaultValue;
     }
 
-    public html(): HTMLElement {
+    public getHTML(): HTMLElement {
         return this.inputElem;
     }
 
