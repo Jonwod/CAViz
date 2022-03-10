@@ -1,6 +1,6 @@
 import { assert } from "../assert.js";
 export class NumberInput {
-    constructor(defaultValue, integer = false, min = null, max = null) {
+    constructor(defaultValue, integer = false, onChange = null, min = null, max = null) {
         if (min !== null && max !== null) {
             assert(max >= min);
         }
@@ -18,6 +18,9 @@ export class NumberInput {
             const newVal = integer ? parseInt(input.value) : parseFloat(input.value);
             assert(newVal !== null && typeof (newVal) !== 'undefined');
             that.value = newVal;
+            if (onChange) {
+                onChange(that);
+            }
         });
         this.inputElem.value = defaultValue.toString();
         this.value = defaultValue;

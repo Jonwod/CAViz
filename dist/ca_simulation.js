@@ -373,6 +373,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         sidebar.appendChild(this.liveCellsDisplay.getHTML());
         this.ui.pauseButton = document.createElement("input");
         this.ui.pauseButton.type = "checkbox";
+        this.ui.pauseButton.classList.add("pause_button");
         sidebar.appendChild(this.ui.pauseButton);
         this.canvas = document.createElement("canvas");
         this.canvas.width = canvasWidth;
