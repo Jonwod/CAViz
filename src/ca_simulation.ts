@@ -7,6 +7,7 @@ import { Camera } from "./camera.js";
 import {TransitionRule, TotalisticTransitionRule} from "./transition_rule.js";
 import {NumberDisplay} from "./ui/number_display.js";
 import { ToggleButton } from "./ui/toggle_button.js";
+import { Table } from "./ui/table.js";
 declare var mat4: any;
 
 /**
@@ -451,10 +452,11 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         topDiv.appendChild(div);
         div.style.display = 'flex';
         div.style.flexDirection = 'row';
-        div.style.justifyContent = 'center';
+        div.style.justifyContent = 'space-evenly';
         div.style.alignItems = 'center';
 
         let sidebar = document.createElement("div");
+        sidebar.style.display = 'block';
         div.appendChild(sidebar);
         let mainContent = document.createElement("div");
         div.appendChild(mainContent);
@@ -466,53 +468,48 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         });
         sidebar.appendChild(drawModeButton);
 
+        let statTable = new Table(2);
 
-        let statTable = document.createElement("table");
+        function addSeperatorToTable() {
+            const lineString =  "--------------------";
+            let x = document.createElement("p");
+            x.innerHTML = lineString
+            let x2 = document.createElement("p");
+            x2.innerHTML = lineString;
+            statTable.addRow([x, x2]);
+        }
 
-        let row = statTable.insertRow();
-        let cell = row.insertCell();
+        addSeperatorToTable();
 
         let label = document.createElement("p");
-        label.innerHTML = "";
-        cell.appendChild(label);
-
         label.innerHTML = "FPS:";
-
         this.fpsCounter = new NumberDisplay(0);
-        cell.appendChild(this.fpsCounter.getHTML());
+        statTable.addRow([label, this.fpsCounter.getHTML()]);
 
         label = document.createElement('p');
         label.innerHTML = "Population Density:";
-        row = statTable.insertRow();
-        cell = row.insertCell();
-
         this.popDensityDisplay = new NumberDisplay(2);
-        cell.appendChild(this.popDensityDisplay.getHTML());
-        label = document.createElement('p');
+        statTable.addRow([label, this.popDensityDisplay.getHTML()]);
 
+        label = document.createElement('p');
         label.innerHTML = "Live Cells:";
         this.liveCellsDisplay = new NumberDisplay(0);
-        sidebar.appendChild(this.liveCellsDisplay.getHTML());
+        statTable.addRow([label, this.liveCellsDisplay.getHTML()]);
 
-        // this.ui.pauseButton = document.createElement("input");
-        // this.ui.pauseButton.type = "checkbox";
-        // this.ui.pauseButton.classList.add("pause_button");
-        // // this.ui.pauseButton.;
-        // sidebar.appendChild(this.ui.pauseButton);
+        addSeperatorToTable();
 
         let tog = new ToggleButton("images/pause.png", 
                                     "images/play-button.png",
                                     {x: 64, y: 64});
         this.ui.pauseButton = tog;
         sidebar.appendChild(tog.getHTML());
+        sidebar.appendChild(statTable.getHTML());
 
         this.canvas = document.createElement("canvas");
         this.canvas.width = canvasWidth;
         this.canvas.height = canvasHeight;
         mainContent.appendChild(this.canvas);
         
-        // document.createElement("");
-
         this.rootElement = topDiv;
 
         // Attributation
