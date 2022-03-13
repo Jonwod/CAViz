@@ -8,6 +8,7 @@ import {TransitionRule, TotalisticTransitionRule} from "./transition_rule.js";
 import {NumberDisplay} from "./ui/number_display.js";
 import { ToggleButton } from "./ui/toggle_button.js";
 import { Table } from "./ui/table.js";
+import { NumberInput } from "./ui/number_input.js";
 declare var mat4: any;
 
 /**
@@ -456,7 +457,9 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         div.style.alignItems = 'center';
 
         let sidebar = document.createElement("div");
-        sidebar.style.display = 'block';
+        sidebar.style.display = 'flex';
+        sidebar.style.flexDirection = 'column';
+        sidebar.style.alignItems = 'center';
         div.appendChild(sidebar);
         let mainContent = document.createElement("div");
         div.appendChild(mainContent);
@@ -467,6 +470,18 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
             this.drawFlat = !this.drawFlat;
         });
         sidebar.appendChild(drawModeButton);
+
+        const that = this;
+        {
+            let controlTable = new Table(2);
+            let label = document.createElement('p');
+            label.innerHTML = "Update Rate: ";
+            let updateRateInput = new NumberInput(10, false, (newRate) => {
+                that.caUpdateRate = newRate.getValue();
+            }, 0);
+            controlTable.addRow([label, updateRateInput.getHTML()]);
+            sidebar.appendChild(controlTable.getHTML());
+        }
 
         let statTable = new Table(2);
 
@@ -532,7 +547,6 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
     public run(): void {
         // hz
         const drawRate = 60.0;
-        const caUpdateRate = 60.0;
         let lastDrawStamp, lastCaUpdateStamp;
         let that = this;
 
@@ -551,7 +565,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
             }
 
             const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
-            if( (timeSinceCaUpdate/1000.0) >= (1.0/caUpdateRate) && !that.isPaused()) {
+            if( (timeSinceCaUpdate/1000.0) >= (1.0/that.caUpdateRate) && !that.isPaused()) {
                 that.update();
                 lastCaUpdateStamp = timestamp;
             }
@@ -786,4 +800,6 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
     };
 
     private cellularAutomaton: CellularAutomaton;
+
+    private caUpdateRate: number = 30;
 }
