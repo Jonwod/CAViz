@@ -476,10 +476,20 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
             let controlTable = new Table(2);
             let label = document.createElement('p');
             label.innerHTML = "Update Rate: ";
-            let updateRateInput = new NumberInput(10, false, (newRate) => {
-                that.caUpdateRate = newRate.getValue();
-            }, 0);
-            controlTable.addRow([label, updateRateInput.getHTML()]);
+            const defaultUpdateRate = 60;
+            this.ui.updateRateInput = new NumberInput(defaultUpdateRate, false, null, 0);
+            controlTable.addRow([label, this.ui.updateRateInput.getHTML()]);
+
+            label = document.createElement('p');
+            label.innerHTML = "Achieved update rate: ";
+            let actualUpdateRateDisplay = new NumberDisplay(0);
+
+            this.ui.updateRateActual = {
+                label: label, 
+                number: actualUpdateRateDisplay
+            };
+            controlTable.addRow([label, actualUpdateRateDisplay.getHTML()]);
+
             sidebar.appendChild(controlTable.getHTML());
         }
 
@@ -541,8 +551,8 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
     }
 
     /**
-     * Will run indefinitely in it's own loop, updating the canvas
-     * This function should be non-blocking
+     * Will run the simulation indefinitely in it's own loop, updating the canvas
+     * This function is non-blocking.
      */
     public run(): void {
         // hz
@@ -550,11 +560,46 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         let lastDrawStamp, lastCaUpdateStamp;
         let that = this;
 
-        function tick(timestamp) {
-            if (lastDrawStamp === undefined)
-                lastDrawStamp = timestamp;
+        let targetUpdateDeltaTime = 1.0/that.ui.updateRateInput.getValue();
+
+        function updateLoop() {
+            let timestamp = Date.now();
             if(lastCaUpdateStamp === undefined)
                 lastCaUpdateStamp = timestamp;
+
+            const timeSinceCaUpdate = (timestamp - lastCaUpdateStamp) / 1000.0;
+            targetUpdateDeltaTime = 1.0/that.ui.updateRateInput.getValue();
+
+            if(!that.isPaused()) {
+                that.update();
+                lastCaUpdateStamp = timestamp;
+                const updateRateActual = (1.0 / timeSinceCaUpdate);
+                console.log("update rate actual: " + updateRateActual);
+
+                // Show actual update rate if didn't achieve target
+                if(updateRateActual + 2 < that.ui.updateRateInput.getValue()) {
+                    that.ui.updateRateActual.label.style.visibility = "visible";
+                    that.ui.updateRateActual.number.setHidden(false);
+                    that.ui.updateRateActual.number.setValue(updateRateActual);
+                } else {
+                    that.ui.updateRateActual.label.style.visibility = "hidden";
+                    that.ui.updateRateActual.number.setHidden(true);
+                }
+            }
+
+            if(!that.terminated) {
+                const timeWorking = Date.now() - timestamp;
+                setTimeout(updateLoop, targetUpdateDeltaTime * 1000 - timeWorking);
+            }
+        }
+
+        setTimeout(updateLoop, targetUpdateDeltaTime * 1000);
+
+
+        function drawLoop(timestamp) {
+            if (lastDrawStamp === undefined)
+                lastDrawStamp = timestamp;
+
             const timeSinceDraw = timestamp - lastDrawStamp;
 
             if ( (timeSinceDraw/1000.0) >= (1.0/drawRate) ) {        
@@ -564,17 +609,11 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
                 that.fpsCounter.setValue(that.framerate);
             }
 
-            const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
-            if( (timeSinceCaUpdate/1000.0) >= (1.0/that.caUpdateRate) && !that.isPaused()) {
-                that.update();
-                lastCaUpdateStamp = timestamp;
-            }
-
             if(!that.terminated) {
-                window.requestAnimationFrame(tick);
+                window.requestAnimationFrame(drawLoop);
             }
         }
-        window.requestAnimationFrame(tick);
+        window.requestAnimationFrame(drawLoop);
     }
 
 
@@ -758,8 +797,15 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
 
     private ui: {
         pauseButton: ToggleButton;
+        updateRateInput: NumberInput;
+        updateRateActual: {
+            label: HTMLParagraphElement;
+            number: NumberDisplay;
+        }
     } = {
-        pauseButton: null
+        pauseButton: null,
+        updateRateInput: null,
+        updateRateActual: null
     };
 
     public getNumCellsInWorld(): number {
@@ -800,6 +846,4 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
     };
 
     private cellularAutomaton: CellularAutomaton;
-
-    private caUpdateRate: number = 30;
 }
