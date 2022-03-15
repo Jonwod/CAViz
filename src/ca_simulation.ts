@@ -686,7 +686,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
         gl.uniform1i(this.renderProgram2DInfo.uniformLocations.uReadBuffer, 0);
 
-        gl.clearColor(0.2,0.0,0.5,1);
+        gl.clearColor(0,0.0,0,1);
         gl.clear(this.gl.COLOR_BUFFER_BIT);
 
         gl.bindVertexArray(this.vao);
