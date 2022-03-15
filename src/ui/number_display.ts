@@ -15,6 +15,10 @@ export class NumberDisplay {
         return this.p;
     }
 
+    public setHidden(hide: boolean) {
+        this.p.style.visibility = hide ? "hidden" : "visible";
+    }
+
     decimalPlaces: number;
     p: HTMLElement;
 }
