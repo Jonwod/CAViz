@@ -70,10 +70,6 @@ export class VoxelMesh {
 
                 out highp vec3 vLighting;
 
-                // can this be lowp?
-                out mediump vec3 normalInterp;
-                out mediump vec3 vertPos;
-
                 // 2D texture but represents 3D world
                 uniform usampler2D uReadBuffer;
 
@@ -119,21 +115,17 @@ export class VoxelMesh {
                         ivec3 voxelCoords = to3DCoords(gl_InstanceID);
                         float gridOffset = -(uSpacing * float(uWorldSize)) / 2.0;
                         vec3 voxelOffset = vec3(voxelCoords) * uSpacing;
-                        vec4 vertPos4 = uModelViewMatrix * vec4(
+                        gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(
                             aVertexPosition + voxelOffset + 
                             vec3(gridOffset, gridOffset, gridOffset)
                             , 1
                         );
-                        gl_Position = uPerspectiveMatrix * vertPos4;
-
                         highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
                         highp vec3 directionalLightColor = vec3(1, 1, 1);
                         highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
                         highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
                         highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
                         vLighting = ambientLight + (directionalLightColor * directional);
-                        normalInterp = vec3(uNormalMatrix * vec4(aVertexNormal, 0.0));
-                        vertPos = vec3(vertPos4) / vertPos4.w;
                     }
                     //
                 }
@@ -141,46 +133,12 @@ export class VoxelMesh {
             fragmentShaderSource: `#version 300 es
             // ---- VOXEL MESH FRAGMENT SHADER ----
                 precision mediump float;
-                // Don't think using this anymore?
                 in highp vec3 vLighting;
-
-                in mediump vec3 normalInterp;
-                in mediump vec3 vertPos;
-                
-                const float Ka = 1.0; // Reflection coefficient
-                const float Kd = 1.0; // Diffuse reflection coefficient
-                const float Ks = 1.0; // Specular reflection coefficient
-                const float shininessVal = 10.0;
-
-                const vec3 ambientColor  = vec3(0.4, 0.5, 0.7);
-                const vec3 diffuseColor  = vec3(0.2, 0.2, 0.7);
-                const vec3 specularColor = vec3(1.0, 1.0, 1.0);
-                const vec3 lightPos = vec3(400.0, 400.0, -203.0);
-
                 out vec4 fragColor;
 
                 void main() {
-                    vec3 N = normalize(normalInterp);
-                    vec3 L = normalize(lightPos - vertPos);
-
-                    float lambertian = max(dot(N, L), 0.0);
-                    float specular = 0.0;
-                    if(lambertian > 0.0) {
-                        vec3 R = reflect(-L, N);
-                        vec3 V = normalize(-vertPos);
-                        // Compute the specular term
-                        float specAngle = max(dot(R, V), 0.0);
-                        specular = pow(specAngle, shininessVal);
-                    }
-                    fragColor = vec4(
-                        Ka * ambientColor +
-                        Kd * lambertian * diffuseColor +
-                        Ks * specular * specularColor, 
-                        1.0
-                    );
-
-                    // fragColor = vec4(1.0, 1.0, 1.0, 1.0);
-                    // fragColor = vec4(vLighting, 1);
+                    fragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                    fragColor = vec4(vLighting, 1);
                 }
            `,
         };
