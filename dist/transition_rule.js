@@ -1,5 +1,6 @@
 import { assert } from "./assert.js";
 import { vecAdd } from "./generic/math/array_vector_math.js";
+import { nChooseK } from "./generic/math/extra_math.js";
 export class Neigbourhood {
     constructor(numDimensions, neigbours) {
         neigbours.forEach((x) => {
@@ -55,6 +56,7 @@ export class TransitionRule {
         assert(neigbourhood.getNumDimensions() === numDimensions, "Neibourhood number of dimensions does not match those for transition rule.");
         this.numDimensions = numDimensions;
         this.neigbourhood = neigbourhood;
+        this.numStates = numStates;
     }
     getNumDimensions() {
         return this.numDimensions;
@@ -87,13 +89,35 @@ export class TotalisticTransitionRule extends TransitionRule {
         this.getNeigbourhood().getOffsets().forEach((offset) => {
             total += configuration.get(vecAdd(cell, offset));
         });
-        for (let i = 0; i < this.singleStateRules[cellValue].transitions.length; ++i) {
-            let ssr = this.singleStateRules[cellValue].transitions[i];
-            if (ssr.range.contains(total)) {
+        return this.successor(cellValue, total);
+    }
+    successor(startState, numNeighbours) {
+        for (let i = 0; i < this.singleStateRules[startState].transitions.length; ++i) {
+            let ssr = this.singleStateRules[startState].transitions[i];
+            if (ssr.range.contains(numNeighbours)) {
                 return ssr.endState;
             }
         }
-        return cellValue;
+        return startState;
+    }
+    langtonLambdaParameter() {
+        let deadStateTransitions = 0;
+        let liveStateTransitions = 0;
+        const numNeighbours = this.getNeigbourhood().getNumNeighbours();
+        const numStates = this.getNumStates();
+        for (let state = 0; state < numStates; ++state) {
+            for (let n = 0; n <= numNeighbours; ++n) {
+                if (this.successor(state, n) === 0) {
+                    deadStateTransitions += nChooseK(numNeighbours, n);
+                }
+                else {
+                    liveStateTransitions += nChooseK(numNeighbours, n);
+                }
+            }
+        }
+        const totalTransitions = deadStateTransitions + liveStateTransitions;
+        console.log("Total: " + totalTransitions + "    dead:  " + deadStateTransitions + "    live: " + liveStateTransitions);
+        return (totalTransitions - deadStateTransitions) / totalTransitions;
     }
     makeShaderTransitionFunction() {
         let f = "uint totalisticTransitionFunction(uint x, uint n) {";

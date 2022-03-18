@@ -47,11 +47,11 @@ class ConstructionState extends State {
             dimensionalityDiv.appendChild(label3d);
             button2d.addEventListener("change", (event) => {
                 that.dimensions = 2;
-                console.log('2');
+                that.revalidate();
             });
             button3d.addEventListener("change", (event) => {
                 that.dimensions = 3;
-                console.log('3');
+                that.revalidate();
             });
             button3d.checked = true;
             this.dimensions = 3;
@@ -109,17 +109,20 @@ class ConstructionState extends State {
         div.appendChild(this.errorBox);
         this.myHTML = div;
         document.getElementsByTagName("body")[0].appendChild(this.myHTML);
+        this.revalidate();
     }
     makeTransitionRule() {
         return transitionRuleFromBaysCoding(this.dimensions, new Range(this.ui.stayAliveInputLow.getValue(), this.ui.stayAliveInputHigh.getValue()), new Range(this.ui.reproduceInputLow.getValue(), this.ui.reproduceInputHigh.getValue()));
     }
     revalidate() {
+        this.prospectiveTransitionRule = this.makeTransitionRule();
         let errorStrings = this.getInputErrors();
         if (errorStrings.length > 0) {
             this.confirmButton.disabled = true;
         }
         else {
             this.confirmButton.disabled = false;
+            console.log("lambda: " + this.prospectiveTransitionRule.langtonLambdaParameter());
         }
         while (this.errorBox.firstChild) {
             this.errorBox.removeChild(this.errorBox.lastChild);
@@ -136,8 +139,7 @@ class ConstructionState extends State {
     }
     getInputErrors() {
         let errors = [];
-        let prospectiveTransitionRule = this.makeTransitionRule();
-        let nNeighbours = prospectiveTransitionRule.getNeigbourhood().getNumNeighbours();
+        let nNeighbours = this.prospectiveTransitionRule.getNeigbourhood().getNumNeighbours();
         if (this.ui.stayAliveInputLow.getValue() < 0) {
             errors.push("The start of the stay alive range cannot be negative");
         }

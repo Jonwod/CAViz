@@ -6,12 +6,15 @@ import { TotalisticTransitionRule } from "./transition_rule.js";
 import { NumberDisplay } from "./ui/number_display.js";
 import { ToggleButton } from "./ui/toggle_button.js";
 import { Table } from "./ui/table.js";
+import { NumberInput } from "./ui/number_input.js";
 export class CASimulation {
     constructor(ca, initialConfiguration, width, height) {
         this.terminated = false;
         this.drawFlat = false;
         this.ui = {
-            pauseButton: null
+            pauseButton: null,
+            updateRateInput: null,
+            updateRateActual: null
         };
         this.stats = {
             capture: true,
@@ -347,7 +350,9 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         div.style.justifyContent = 'space-evenly';
         div.style.alignItems = 'center';
         let sidebar = document.createElement("div");
-        sidebar.style.display = 'block';
+        sidebar.style.display = 'flex';
+        sidebar.style.flexDirection = 'column';
+        sidebar.style.alignItems = 'center';
         div.appendChild(sidebar);
         let mainContent = document.createElement("div");
         div.appendChild(mainContent);
@@ -357,6 +362,24 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
             this.drawFlat = !this.drawFlat;
         });
         sidebar.appendChild(drawModeButton);
+        const that = this;
+        {
+            let controlTable = new Table(2);
+            let label = document.createElement('p');
+            label.innerHTML = "Update Rate: ";
+            const defaultUpdateRate = 60;
+            this.ui.updateRateInput = new NumberInput(defaultUpdateRate, false, null, 0);
+            controlTable.addRow([label, this.ui.updateRateInput.getHTML()]);
+            label = document.createElement('p');
+            label.innerHTML = "Achieved update rate: ";
+            let actualUpdateRateDisplay = new NumberDisplay(0);
+            this.ui.updateRateActual = {
+                label: label,
+                number: actualUpdateRateDisplay
+            };
+            controlTable.addRow([label, actualUpdateRateDisplay.getHTML()]);
+            sidebar.appendChild(controlTable.getHTML());
+        }
         let statTable = new Table(2);
         function addSeperatorToTable() {
             const lineString = "--------------------";
@@ -400,14 +423,31 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
     }
     run() {
         const drawRate = 60.0;
-        const caUpdateRate = 60.0;
         let lastDrawStamp, lastCaUpdateStamp;
         let that = this;
-        function tick(timestamp) {
-            if (lastDrawStamp === undefined)
-                lastDrawStamp = timestamp;
+        let targetUpdateDeltaTime = 1.0 / that.ui.updateRateInput.getValue();
+        function updateLoop() {
+            let timestamp = Date.now();
             if (lastCaUpdateStamp === undefined)
                 lastCaUpdateStamp = timestamp;
+            const timeSinceCaUpdate = (timestamp - lastCaUpdateStamp) / 1000.0;
+            targetUpdateDeltaTime = 1.0 / that.ui.updateRateInput.getValue();
+            if (!that.isPaused()) {
+                that.update();
+                lastCaUpdateStamp = timestamp;
+                const updateRateActual = (1.0 / timeSinceCaUpdate);
+                console.log("update rate actual: " + updateRateActual);
+                that.ui.updateRateActual.number.setValue(updateRateActual);
+            }
+            if (!that.terminated) {
+                const timeWorking = Date.now() - timestamp;
+                setTimeout(updateLoop, targetUpdateDeltaTime * 1000 - timeWorking);
+            }
+        }
+        setTimeout(updateLoop, targetUpdateDeltaTime * 1000);
+        function drawLoop(timestamp) {
+            if (lastDrawStamp === undefined)
+                lastDrawStamp = timestamp;
             const timeSinceDraw = timestamp - lastDrawStamp;
             if ((timeSinceDraw / 1000.0) >= (1.0 / drawRate)) {
                 that.draw();
@@ -415,16 +455,11 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
                 that.framerate = (1.0 / timeSinceDraw) * 1000;
                 that.fpsCounter.setValue(that.framerate);
             }
-            const timeSinceCaUpdate = timestamp - lastCaUpdateStamp;
-            if ((timeSinceCaUpdate / 1000.0) >= (1.0 / caUpdateRate) && !that.isPaused()) {
-                that.update();
-                lastCaUpdateStamp = timestamp;
-            }
             if (!that.terminated) {
-                window.requestAnimationFrame(tick);
+                window.requestAnimationFrame(drawLoop);
             }
         }
-        window.requestAnimationFrame(tick);
+        window.requestAnimationFrame(drawLoop);
     }
     terminate() {
         this.terminated = true;
@@ -467,7 +502,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
         gl.uniform1i(this.renderProgram2DInfo.uniformLocations.uReadBuffer, 0);
-        gl.clearColor(0.2, 0.0, 0.5, 1);
+        gl.clearColor(0, 0.0, 0, 1);
         gl.clear(this.gl.COLOR_BUFFER_BIT);
         gl.bindVertexArray(this.vao);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.index);
@@ -492,7 +527,10 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, 0);
         gl.viewport(0, 0, this.textureSize, this.textureSize);
         gl.bindVertexArray(this.vao);
+        const before = Date.now();
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
+        const t = Date.now() - before;
+        console.log("Draw elements took " + t + "ms");
         gl.bindVertexArray(null);
         if (this.stats) {
             let pixels = new Uint32Array(this.textureSize * this.textureSize * 4);

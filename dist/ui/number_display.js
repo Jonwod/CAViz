@@ -12,4 +12,7 @@ export class NumberDisplay {
     getHTML() {
         return this.p;
     }
+    setHidden(hide) {
+        this.p.style.visibility = hide ? "hidden" : "visible";
+    }
 }
