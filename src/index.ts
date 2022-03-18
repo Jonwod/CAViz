@@ -67,12 +67,12 @@ class ConstructionState extends State {
 
             button2d.addEventListener("change", (event) => {
                 that.dimensions = 2;
-                console.log('2');
+                that.revalidate();
             });
 
             button3d.addEventListener("change", (event) => {
                 that.dimensions = 3;
-                console.log('3');
+                that.revalidate();
             });
 
             button3d.checked = true;
@@ -156,6 +156,8 @@ class ConstructionState extends State {
         this.myHTML = div;
         
         document.getElementsByTagName("body")[0].appendChild(this.myHTML);
+
+        this.revalidate();
     }
 
     private ui: {
@@ -182,11 +184,13 @@ class ConstructionState extends State {
     }
 
     private revalidate() {
+        this.prospectiveTransitionRule = this.makeTransitionRule();
         let errorStrings = this.getInputErrors();
         if(errorStrings.length > 0) {
             this.confirmButton.disabled = true;
         } else {
             this.confirmButton.disabled = false;
+            console.log("lambda: " + this.prospectiveTransitionRule.langtonLambdaParameter());
         }
 
         while(this.errorBox.firstChild) {
@@ -211,8 +215,7 @@ class ConstructionState extends State {
     private getInputErrors(): string[] {
         let errors: string[] = [];
 
-        let prospectiveTransitionRule = this.makeTransitionRule();
-        let nNeighbours = prospectiveTransitionRule.getNeigbourhood().getNumNeighbours();
+        let nNeighbours = this.prospectiveTransitionRule.getNeigbourhood().getNumNeighbours();
 
         if(this.ui.stayAliveInputLow.getValue() < 0) {
             errors.push("The start of the stay alive range cannot be negative");
@@ -282,6 +285,7 @@ class ConstructionState extends State {
     // private errors: HTMLElement[];
     private confirmButton: HTMLButtonElement;
     private maxTextureSize: number;
+    private prospectiveTransitionRule: TransitionRule;
 }
 
 class SimState extends State {
