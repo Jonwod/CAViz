@@ -22,23 +22,8 @@ class ConstructionState extends State {
         let gl = document.createElement("canvas").getContext("webgl");
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
 
-        // let button = document.createElement("button");
-        // button.innerHTML = "2D Cellular Automaton";
-        // button.addEventListener("click", () => {
-        //     appStateMachine.setState(new SimState(false));
-        // });
-        // div.appendChild(button);
-
-        // let button2 = document.createElement("button");
-        // button2.addEventListener("click", () => {
-        //     appStateMachine.setState(new SimState(true));
-        // });
-        // button2.innerHTML = "3D Cellular Automaton";
-        // div.appendChild(button2);
-
         let that = this;
 
-        // let form = document.createElement('form');
         {
             let dimensionalityDiv = document.createElement("div");
 
@@ -91,7 +76,6 @@ class ConstructionState extends State {
             let aliveRangeLable = document.createElement("p");
             aliveRangeLable.innerHTML = "<b>Stay-alive range</b>";
             totalisticParamsDiv.appendChild(aliveRangeLable);
-            // totalisticParamsDiv.appendChild(document.createElement("br"));  
             let aliveRangeExpl = document.createElement("p");
             aliveRangeExpl.innerHTML = "(Live cell will remain alive when the number of live neighbours falls in this range)";
             totalisticParamsDiv.appendChild(aliveRangeExpl);
@@ -102,7 +86,6 @@ class ConstructionState extends State {
             let reproduceRangeLabel = document.createElement("p");
             reproduceRangeLabel.innerHTML = "<b>Reproduce range</b>";
             totalisticParamsDiv.appendChild(reproduceRangeLabel);
-            // totalisticParamsDiv.appendChild(document.createElement("br"));  
             let reproduceRangeExpl = document.createElement("p");
             reproduceRangeExpl.innerHTML = "(Dead cell becomes alive when the number of live neighbours falls in this range)";
             totalisticParamsDiv.appendChild(reproduceRangeExpl);
@@ -151,8 +134,6 @@ class ConstructionState extends State {
         this.errorBox = document.createElement('div');
         div.appendChild(this.errorBox);
         
-        // div.appendChild();
-
         this.myHTML = div;
         
         document.getElementsByTagName("body")[0].appendChild(this.myHTML);
