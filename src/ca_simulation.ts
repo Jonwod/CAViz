@@ -477,7 +477,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
             let controlTable = new Table(2);
             let label = document.createElement('p');
             label.innerHTML = "Update Rate: ";
-            const defaultUpdateRate = 60;
+            const defaultUpdateRate = 3;
             this.ui.updateRateInput = new NumberInput(defaultUpdateRate, false, null, 0);
             controlTable.addRow([label, this.ui.updateRateInput.getHTML()]);
 
