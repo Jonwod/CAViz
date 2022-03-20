@@ -26,6 +26,13 @@ runAllTests();
 class ConstructionState extends State {
     onEnter(): void {
         let div = document.createElement("div");
+        let horizontalDiv1 = document.createElement("div");
+        horizontalDiv1.style.display = 'flex';
+        horizontalDiv1.style.flexDirection = 'row';
+        horizontalDiv1.style.justifyContent = 'space-evenly';
+        horizontalDiv1.style.alignItems = 'center';
+
+        horizontalDiv1.appendChild(div);
 
         let gl = document.createElement("canvas").getContext("webgl");
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
@@ -151,17 +158,19 @@ class ConstructionState extends State {
             if(ca.dimensions === 2) {
                 button2d.checked = true;
                 button3d.checked = false;
+                that.dimensions = 2;
             } else if(ca.dimensions === 3) {
                 button2d.checked = false;
                 button3d.checked = true;
+                that.dimensions = 3;
             } else {
                 assert(false, "Only 2 or 3 dimensions supported");
             }
             that.revalidate();
         });
-        div.appendChild(CAGH.getHTML());
+        horizontalDiv1.appendChild(CAGH.getHTML());
         
-        this.myHTML = div;
+        this.myHTML = horizontalDiv1;
         
         document.getElementsByTagName("body")[0].appendChild(this.myHTML);
 
