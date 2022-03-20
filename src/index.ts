@@ -1,5 +1,5 @@
 import { Renderer } from "./renderer.js";
-import {CellularAutomaton} from "./cellular_automaton.js";
+import {CellularAutomaton, TotalisticCAParameters} from "./cellular_automaton.js";
 import { TransitionRule, TotalisticTransitionRule, Neigbourhood } from "./transition_rule.js";
 import { Range } from "./range.js";
 import { Configuration } from "./configuration.js";
@@ -10,6 +10,8 @@ import { State, StateMachine } from "./generic/state_machine.js";
 import {MeshTemplate} from "./mesh_template.js";
 import {NumberInput} from "./ui/number_input.js";
 import {runAllTests} from "./test.js";
+import { CAGreatestHits } from "./ui/ca_greatest_hits.js";
+import { assert } from "./assert.js";
 
 declare var mat4: any;
 
@@ -30,10 +32,11 @@ class ConstructionState extends State {
 
         let that = this;
 
+        let button2d = document.createElement("input");
+        let button3d = document.createElement("input");
         {
             let dimensionalityDiv = document.createElement("div");
 
-            let button2d = document.createElement("input");
             button2d.setAttribute("type", "radio");
             button2d.setAttribute("name", "dim");
             button2d.value = "2d";
@@ -45,7 +48,6 @@ class ConstructionState extends State {
             label2d.setAttribute("for", button2d.id);
             dimensionalityDiv.appendChild(label2d);
 
-            let button3d = document.createElement("input");
             button3d.setAttribute("type", "radio");
             button3d.setAttribute("name", "dim");
             button3d.value = "3d";
@@ -139,6 +141,25 @@ class ConstructionState extends State {
 
         this.errorBox = document.createElement('div');
         div.appendChild(this.errorBox);
+
+        let CAGH: CAGreatestHits = new CAGreatestHits();
+        CAGH.bindToOnSelected((name: string, ca: TotalisticCAParameters) => {
+            that.ui.stayAliveInputLow.setValue(ca.stayAlive.getStart());
+            that.ui.stayAliveInputHigh.setValue(ca.stayAlive.getEnd());
+            that.ui.reproduceInputLow.setValue(ca.reproduce.getStart());
+            that.ui.reproduceInputHigh.setValue(ca.reproduce.getEnd());
+            if(ca.dimensions === 2) {
+                button2d.checked = true;
+                button3d.checked = false;
+            } else if(ca.dimensions === 3) {
+                button2d.checked = false;
+                button3d.checked = true;
+            } else {
+                assert(false, "Only 2 or 3 dimensions supported");
+            }
+            that.revalidate();
+        });
+        div.appendChild(CAGH.getHTML());
         
         this.myHTML = div;
         
