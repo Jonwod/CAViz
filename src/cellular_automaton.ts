@@ -1,6 +1,7 @@
 import { assert } from "./assert.js";
 import { TransitionRule } from "./transition_rule.js";
 import { Configuration } from "./configuration.js";
+import { Range } from "./range.js";
 
 
 export class CellularAutomaton {
@@ -43,4 +44,11 @@ export class CellularAutomaton {
     //    takes an 
 
     // configuration: an assignment of state to each cell
+}
+
+
+export interface TotalisticCAParameters {
+    stayAlive: Range;
+    reproduce: Range;
+    dimensions: number;
 }
