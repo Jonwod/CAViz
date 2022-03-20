@@ -9,10 +9,16 @@ import { CASimulation } from "./ca_simulation.js";
 import { State, StateMachine } from "./generic/state_machine.js";
 import {MeshTemplate} from "./mesh_template.js";
 import {NumberInput} from "./ui/number_input.js";
+import {runAllTests} from "./test.js";
 
 declare var mat4: any;
 
 let appStateMachine: StateMachine;
+
+
+// ~~~~~ TESTING ~~~~~
+runAllTests();
+// ~~~~~~~~~~~~~~~~~~~
 
 
 class ConstructionState extends State {
