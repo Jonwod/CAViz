@@ -572,19 +572,12 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
 
             if(!that.isPaused()) {
                 that.update();
+
                 lastCaUpdateStamp = timestamp;
                 const updateRateActual = (1.0 / timeSinceCaUpdate);
                 console.log("update rate actual: " + updateRateActual);
 
-                // Show actual update rate if didn't achieve target
-                if(updateRateActual + 2 < that.ui.updateRateInput.getValue()) {
-                    that.ui.updateRateActual.label.style.visibility = "visible";
-                    that.ui.updateRateActual.number.setHidden(false);
-                    that.ui.updateRateActual.number.setValue(updateRateActual);
-                } else {
-                    that.ui.updateRateActual.label.style.visibility = "hidden";
-                    that.ui.updateRateActual.number.setHidden(true);
-                }
+                that.ui.updateRateActual.number.setValue(updateRateActual);
             }
 
             if(!that.terminated) {
