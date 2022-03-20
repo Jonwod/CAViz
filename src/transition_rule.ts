@@ -1,7 +1,8 @@
 import { assert } from "./assert.js";
 import {Configuration} from "./configuration.js";
 import {vecAdd} from "./generic/math/array_vector_math.js";
-import {Range} from "./range";
+import {Range} from "./range.js";
+import { nChooseK } from "./generic/math/extra_math.js";
 
 export class Neigbourhood {
     static makeForDistance1(numDimensions: number): Neigbourhood {
@@ -79,6 +80,7 @@ export abstract class TransitionRule {
             "Neibourhood number of dimensions does not match those for transition rule.");
         this.numDimensions = numDimensions;
         this.neigbourhood = neigbourhood;
+        this.numStates = numStates;
     }
 
     public getNumDimensions(): number {
@@ -95,13 +97,20 @@ export abstract class TransitionRule {
     
     abstract computeSuccessorState(configuration: Configuration, cell: number[]): number;
 
+    /**
+     * Langton's Lambda parameter is the fraction of transition rules
+     * that produce a live cell. This turns out to be a heuristic for
+     * predicting the "complexity" of behaviour for a given rule.
+     */
+    abstract langtonLambdaParameter(): number;
+
     private neigbourhood: Neigbourhood;
     private numDimensions: number;
     private numStates: number;
 }
 
 /**
- * Specifies the transitions for a particular state.
+ * Specifies the transitions for a particular start state.
  * 
  */
 export interface SingleStateTotalisticTransitionRule {
@@ -143,17 +152,45 @@ export class TotalisticTransitionRule extends TransitionRule {
             total += configuration.get(vecAdd(cell, offset));
         });
 
-        // console.log("n: " + total);
+        return this.successor(cellValue, total);
+    }
 
-        for(let i = 0; i < this.singleStateRules[cellValue].transitions.length; ++i) {
-            let ssr = this.singleStateRules[cellValue].transitions[i];
-            if(ssr.range.contains(total)) {
+    private successor(startState: number, numNeighbours: number): number {
+        for(let i = 0; i < this.singleStateRules[startState].transitions.length; ++i) {
+            let ssr = this.singleStateRules[startState].transitions[i];
+            if(ssr.range.contains(numNeighbours)) {
                 return ssr.endState;
             }
         }
-
-        return cellValue;
+        return startState;
     }
+
+    /**
+     * Langton's Lambda parameter is the fraction of transition rules
+     * that produce a live cell. This turns out to be a heuristic for
+     * predicting the "complexity" of behaviour for a given rule.
+     * State 0 is assumed to be the dead or "quiescent" state
+    */
+    public langtonLambdaParameter(): number {
+        let deadStateTransitions = 0;
+        let liveStateTransitions = 0;
+        const numNeighbours: number = this.getNeigbourhood().getNumNeighbours();
+        const numStates: number = this.getNumStates();
+        for(let state = 0; state < numStates; ++state) {
+            for(let n = 0; n <= numNeighbours; ++n) {
+                if(this.successor(state, n) === 0) {
+                    deadStateTransitions += nChooseK(numNeighbours, n);
+                } else {
+                    liveStateTransitions += nChooseK(numNeighbours, n);
+                    // console.log("live state transitions: " + );
+                }
+            }
+        }
+        const totalTransitions = deadStateTransitions + liveStateTransitions;
+        console.log("Total: " + totalTransitions  +  "    dead:  " + deadStateTransitions + "    live: " + liveStateTransitions);
+        return (totalTransitions - deadStateTransitions) / totalTransitions;
+    }
+    
 
     /**
      * Returns a GLSL function with the signature
