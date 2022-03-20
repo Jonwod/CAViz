@@ -37,6 +37,16 @@ export class NumberInput {
         return this.value;
     }
 
+    /**
+     * Forces current value to that specified. onChange callback
+     * will not be fired.
+     * @param value New value
+     */
+    public setValue(value: number) {
+        this.value = value;
+        this.inputElem.value = value.toString();
+    }
+
     private inputElem: HTMLInputElement;
 
     private value: number;
