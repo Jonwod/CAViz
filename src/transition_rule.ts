@@ -187,7 +187,6 @@ export class TotalisticTransitionRule extends TransitionRule {
             }
         }
         const totalTransitions = deadStateTransitions + liveStateTransitions;
-        console.log("Total: " + totalTransitions  +  "    dead:  " + deadStateTransitions + "    live: " + liveStateTransitions);
         return (totalTransitions - deadStateTransitions) / totalTransitions;
     }
     
