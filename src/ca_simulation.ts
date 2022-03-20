@@ -576,8 +576,6 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
 
                 lastCaUpdateStamp = timestamp;
                 const updateRateActual = (1.0 / timeSinceCaUpdate);
-                console.log("update rate actual: " + updateRateActual);
-
                 that.ui.updateRateActual.number.setValue(updateRateActual);
             }
 
