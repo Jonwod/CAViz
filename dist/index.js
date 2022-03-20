@@ -6,7 +6,9 @@ import { transitionRuleFromBaysCoding } from "./bays_coding.js";
 import { CASimulation } from "./ca_simulation.js";
 import { State, StateMachine } from "./generic/state_machine.js";
 import { NumberInput } from "./ui/number_input.js";
+import { runAllTests } from "./test.js";
 let appStateMachine;
+runAllTests();
 class ConstructionState extends State {
     constructor() {
         super(...arguments);
