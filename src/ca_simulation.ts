@@ -464,12 +464,13 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         let mainContent = document.createElement("div");
         div.appendChild(mainContent);
 
-        let drawModeButton = document.createElement("button");
-        drawModeButton.innerText = "Draw mode";
-        drawModeButton.addEventListener("click", () => {
-            this.drawFlat = !this.drawFlat;
-        });
-        sidebar.appendChild(drawModeButton);
+        // Looked more like a bug than a feature
+        // let drawModeButton = document.createElement("button");
+        // drawModeButton.innerText = "Draw mode";
+        // drawModeButton.addEventListener("click", () => {
+        //     this.drawFlat = !this.drawFlat;
+        // });
+        // sidebar.appendChild(drawModeButton);
 
         const that = this;
         {
