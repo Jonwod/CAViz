@@ -10,6 +10,9 @@ import { Table } from "./table.js";
 export class CAGreatestHits {
     constructor() {
         this.div = document.createElement("div");
+        let heading = document.createElement('h2');
+        heading.innerHTML = "Greatest Hits";
+        this.div.appendChild(heading);
         let t = new Table(2);
         let entries: {name: string, ca: TotalisticCAParameters}[] = [
             {name: "Conway's game of Life", ca: {stayAlive: new Range(2, 3), reproduce: new Range(3, 3), dimensions: 2}},
