@@ -31,4 +31,8 @@ export class NumberInput {
     getValue() {
         return this.value;
     }
+    setValue(value) {
+        this.value = value;
+        this.inputElem.value = value.toString();
+    }
 }

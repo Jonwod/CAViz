@@ -356,18 +356,12 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         div.appendChild(sidebar);
         let mainContent = document.createElement("div");
         div.appendChild(mainContent);
-        let drawModeButton = document.createElement("button");
-        drawModeButton.innerText = "Draw mode";
-        drawModeButton.addEventListener("click", () => {
-            this.drawFlat = !this.drawFlat;
-        });
-        sidebar.appendChild(drawModeButton);
         const that = this;
         {
             let controlTable = new Table(2);
             let label = document.createElement('p');
             label.innerHTML = "Update Rate: ";
-            const defaultUpdateRate = 60;
+            const defaultUpdateRate = 3;
             this.ui.updateRateInput = new NumberInput(defaultUpdateRate, false, null, 0);
             controlTable.addRow([label, this.ui.updateRateInput.getHTML()]);
             label = document.createElement('p');
@@ -436,7 +430,6 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
                 that.update();
                 lastCaUpdateStamp = timestamp;
                 const updateRateActual = (1.0 / timeSinceCaUpdate);
-                console.log("update rate actual: " + updateRateActual);
                 that.ui.updateRateActual.number.setValue(updateRateActual);
             }
             if (!that.terminated) {
@@ -527,10 +520,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, 0);
         gl.viewport(0, 0, this.textureSize, this.textureSize);
         gl.bindVertexArray(this.vao);
-        const before = Date.now();
         gl.drawElements(gl.TRIANGLES, this.buffers.indexCount, gl.UNSIGNED_SHORT, 0);
-        const t = Date.now() - before;
-        console.log("Draw elements took " + t + "ms");
         gl.bindVertexArray(null);
         if (this.stats) {
             let pixels = new Uint32Array(this.textureSize * this.textureSize * 4);
