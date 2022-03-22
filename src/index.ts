@@ -12,6 +12,7 @@ import {NumberInput} from "./ui/number_input.js";
 import {runAllTests} from "./test.js";
 import { CAGreatestHits } from "./ui/ca_greatest_hits.js";
 import { assert } from "./assert.js";
+import { ConstructionFeedbackPanel } from "./ui/construction_feedback_panel.js";
 
 declare var mat4: any;
 
@@ -75,8 +76,8 @@ class ConstructionState extends State {
                 that.revalidate();
             });
 
-            button3d.checked = true;
-            this.dimensions = 3;
+            button2d.checked = true;
+            this.dimensions = 2;
 
             div.appendChild(dimensionalityDiv);
         }
@@ -168,7 +169,14 @@ class ConstructionState extends State {
             }
             that.revalidate();
         });
-        horizontalDiv1.appendChild(CAGH.getHTML());
+
+        let rightDiv = document.createElement("div");
+        rightDiv.appendChild(CAGH.getHTML());
+        horizontalDiv1.appendChild(rightDiv);
+
+        let constructionFeedbackPanel = new ConstructionFeedbackPanel();
+        rightDiv.appendChild(constructionFeedbackPanel.getHTML());
+        this.ui.constructionFeedbackPanel = constructionFeedbackPanel;
         
         this.myHTML = horizontalDiv1;
         
@@ -184,13 +192,15 @@ class ConstructionState extends State {
         reproduceInputHigh: NumberInput,
         worldSizeInput: NumberInput,
         popDensityInput: NumberInput
+        constructionFeedbackPanel: ConstructionFeedbackPanel;
     } = {
         stayAliveInputLow: null,
         stayAliveInputHigh: null,
         reproduceInputLow: null,
         reproduceInputHigh: null,
         worldSizeInput: null,
-        popDensityInput: null
+        popDensityInput: null,
+        constructionFeedbackPanel: null
     };
 
     private makeTransitionRule(): TransitionRule {
@@ -207,7 +217,7 @@ class ConstructionState extends State {
             this.confirmButton.disabled = true;
         } else {
             this.confirmButton.disabled = false;
-            console.log("lambda: " + this.prospectiveTransitionRule.langtonLambdaParameter());
+            this.ui.constructionFeedbackPanel.update(this.prospectiveTransitionRule);
         }
 
         while(this.errorBox.firstChild) {
