@@ -238,31 +238,62 @@ class ConstructionState extends State {
             errors.push("The start of the stay alive range cannot be negative");
         }
 
-        if(this.ui.stayAliveInputHigh.getValue() > nNeighbours) {
-            errors.push("The end of the stay alive range cannot be greater than " + 
-            nNeighbours + " as this is the maximum possible number of live neighbours.");
+        if(!this.ui.stayAliveInputLow.isValid()) {
+            errors.push("Start of stay alive range must be an integer");
         }
 
         if(this.ui.stayAliveInputLow.getValue() > this.ui.stayAliveInputHigh.getValue()) {
-            errors.push("The start of the stay alive range must be less than or equal to the end.");
+            errors.push("The start of the stay alive range must be less than or equal to the end");
         }
 
         if(this.ui.stayAliveInputLow.getValue() < 0) {
             errors.push("The start of the reproduce range cannot be negative");
         }
 
-        if(this.ui.reproduceInputLow.getValue() > this.ui.reproduceInputHigh.getValue()) {
-            errors.push("The start of the reproduce range must be less than or equal to the end.");
+
+        if(this.ui.stayAliveInputHigh.getValue() > nNeighbours) {
+            errors.push("The end of the stay alive range cannot be greater than " + 
+            nNeighbours + " as this is the maximum possible number of live neighbours");
         }
+
+        if(!this.ui.stayAliveInputHigh.isValid()) {
+            errors.push("End of stay alive range must be an integer");
+        }
+
+
+        if(this.ui.reproduceInputLow.getValue() > this.ui.reproduceInputHigh.getValue()) {
+            errors.push("The start of the reproduce range must be less than or equal to the end");
+        }
+
+        if(!this.ui.reproduceInputLow.isValid()) {
+            errors.push("Start of reproduce range must be an integer");
+        }
+
+
 
         if(this.ui.reproduceInputHigh.getValue() > nNeighbours) {
             errors.push("The end of the reproduce range cannot be greater than " + 
             nNeighbours + " as this is the maximum possible number of live neighbours.");
         }
 
+        if(!this.ui.reproduceInputHigh.isValid()) {
+            errors.push("End of reproduce range must be an integer");
+        }
+
+
+        if(!this.ui.popDensityInput.isValid()) {
+            errors.push("Population density must be a number in the range 0-1");
+        }
+
         const pd = this.ui.popDensityInput.getValue();
         if(pd < 0  ||  pd > 1) {
             errors.push("Population density must be in the range 0-1");
+        }
+
+
+
+        if(!this.ui.worldSizeInput.isValid()) {
+            errors.push("World size must be an integer");
         }
 
         // Determine min/max world size and verify
