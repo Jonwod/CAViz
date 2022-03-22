@@ -47,7 +47,6 @@ export class CAGreatestHits {
         let that = this;
         button.addEventListener('click', () => {
             that.callback(name, ca);
-            console.log("hallo " + name);
         });
         button.innerHTML = name;
         let dims = document.createElement("p");
