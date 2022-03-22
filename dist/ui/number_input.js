@@ -5,7 +5,7 @@ export class NumberInput {
             assert(max >= min);
         }
         this.inputElem = document.createElement("input");
-        this.inputElem.setAttribute("type", "number");
+        this.inputElem.type = "number";
         if (min !== null) {
             this.inputElem.setAttribute("min", min.toString());
         }
@@ -15,8 +15,10 @@ export class NumberInput {
         let that = this;
         this.inputElem.addEventListener("change", (e) => {
             let input = e.target;
-            const newVal = integer ? parseInt(input.value) : parseFloat(input.value);
-            assert(newVal !== null && typeof (newVal) !== 'undefined');
+            let newVal = integer ? parseInt(input.value) : parseFloat(input.value);
+            if (integer && input.value.includes(".")) {
+                newVal = NaN;
+            }
             that.value = newVal;
             if (onChange) {
                 onChange(that);
@@ -30,6 +32,9 @@ export class NumberInput {
     }
     getValue() {
         return this.value;
+    }
+    isValid() {
+        return !isNaN(this.value);
     }
     setValue(value) {
         this.value = value;
