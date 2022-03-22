@@ -514,7 +514,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
 
         label = document.createElement('p');
         label.innerHTML = "Population Density:";
-        this.popDensityDisplay = new NumberDisplay(2);
+        this.popDensityDisplay = new NumberDisplay(5);
         statTable.addRow([label, this.popDensityDisplay.getHTML()]);
 
         label = document.createElement('p');
