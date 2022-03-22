@@ -7,7 +7,7 @@ export class NumberInput {
             assert(max >= min);
         }
         this.inputElem = document.createElement("input");
-        this.inputElem.setAttribute("type", "number");
+        this.inputElem.type = "number";
         if(min !== null) {
             this.inputElem.setAttribute("min", min.toString());
         }
@@ -17,9 +17,10 @@ export class NumberInput {
         let that = this;
         this.inputElem.addEventListener("change", (e) => {
             let input = e.target as HTMLInputElement;
-            const newVal = integer ? parseInt(input.value) : parseFloat(input.value);
-            // TODO: better validation and handling
-            assert(newVal !== null && typeof(newVal) !== 'undefined');
+            let newVal = integer ? parseInt(input.value) : parseFloat(input.value);
+            if(integer && input.value.includes(".")) {
+                newVal = NaN;
+            }
             that.value = newVal;
             if(onChange) {
                 onChange(that);
@@ -33,8 +34,17 @@ export class NumberInput {
         return this.inputElem;
     }
 
+    // Will return NaN if input is not a valid number
     public getValue(): number {
         return this.value;
+    }
+
+    /**
+     * Returns false if input is not a valid number of the appropriate
+     * type.
+     */
+    public isValid(): boolean {
+        return !isNaN(this.value);
     }
 
     /**
