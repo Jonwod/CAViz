@@ -25,6 +25,63 @@ export class CASimulation {
     private popDensityDisplay: NumberDisplay;
     private liveCellsDisplay:  NumberDisplay;
 
+    /**
+     * Overrides the state of every cell to the specified configuration.
+     * @param config The "Configuration" for the CA (a state for each cell)
+     */
+    private setWorldState(config: Configuration) {
+        const gl = this.gl;
+        const level = 0;
+        const internalFormat = gl.RGBA8UI;
+        const border = 0;
+        const format = gl.RGBA_INTEGER;
+        const type = gl.UNSIGNED_BYTE;
+        const initConf = config.getData();
+        const textureSize = this.textureSize;
+
+        let data = new Uint8Array(textureSize * textureSize * 4);
+        
+        for(let i = 0, j = 0; i < initConf.length; ++i) {
+            // This is silly
+            data[j++] = initConf[i];
+            data[j++] = initConf[i];
+            data[j++] = initConf[i];
+            data[j++] = initConf[i];
+        }
+
+        // It is possible there is some extra space in the texture 
+        // (if the number of cells in the world is not a square number)
+        // so fill it out with 0's
+        for(let i = initConf.length, j = initConf.length * 4; i < textureSize * textureSize; ++i) {
+            data[j++] = 0;
+            data[j++] = 0;
+            data[j++] = 0;
+            data[j++] = 0; 
+        }
+
+        gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+            textureSize, textureSize, border,
+            format, type, data);
+
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        // Init writebuffer
+        gl.bindTexture(gl.TEXTURE_2D, this.writeBuffer);
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+            textureSize, textureSize, border,
+            format, type, null);
+
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    }
+
+
     constructor(ca: CellularAutomaton, initialConfiguration: Configuration, width: number, height: number) {
         const worldSize = initialConfiguration.getSize();
         this.worldSize = worldSize;
@@ -50,64 +107,16 @@ export class CASimulation {
 
         this.drawFlat = ca.getNumDimensions() < 3;
 
+        this.setWorldState(initialConfiguration);
+
+        // Create and bind the framebuffer
+        // After binding the framebuffer, draw calls will draw to it
+        this.frameBuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer); 
         {
-            const level = 0;
-            const internalFormat = gl.RGBA8UI;
-            const border = 0;
-            const format = gl.RGBA_INTEGER;
-            const type = gl.UNSIGNED_BYTE;
-            const initConf = initialConfiguration.getData();
-
-            // Init readbuffer to initial CA configuration
-            let data = new Uint8Array(textureSize * textureSize * 4);
-            
-            
-            for(let i = 0, j = 0; i < initConf.length; ++i) {
-                // This is silly
-                data[j++] = initConf[i];
-                data[j++] = initConf[i];
-                data[j++] = initConf[i];
-                data[j++] = initConf[i];
-            }
-
-            // It is possible there is some extra space in the texture 
-            // (if the number of cells in the world is not a square number)
-            // so fill it out with 0's
-            for(let i = initConf.length, j = initConf.length * 4; i < textureSize * textureSize; ++i) {
-                data[j++] = 0;
-                data[j++] = 0;
-                data[j++] = 0;
-                data[j++] = 0; 
-            }
-
-            gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
-            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                textureSize, textureSize, border,
-                format, type, data);
-
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-            // Init writebuffer
-            gl.bindTexture(gl.TEXTURE_2D, this.writeBuffer);
-            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                textureSize, textureSize, border,
-                format, type, null);
-
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        
-            // Create and bind the framebuffer
-            // After binding the framebuffer, draw calls will draw to it
-            this.frameBuffer = gl.createFramebuffer();
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer); 
-            
             // attach the texture as the first color attachment
             const attachmentPoint = gl.COLOR_ATTACHMENT0;
+            const level = 0;
             gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, level);
         }
 
