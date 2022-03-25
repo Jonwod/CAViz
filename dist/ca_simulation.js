@@ -1,4 +1,5 @@
 import { assert } from "./assert.js";
+import { Configuration } from "./configuration.js";
 import { makeProgram } from "./gl_helpers.js";
 import { VoxelMesh } from "./voxel_mesh.js";
 import { Camera } from "./camera.js";
@@ -38,41 +39,12 @@ export class CASimulation {
         const textureSize = Math.ceil(Math.sqrt(numCells));
         this.textureSize = textureSize;
         this.drawFlat = ca.getNumDimensions() < 3;
+        this.setWorldState(initialConfiguration);
+        this.frameBuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
         {
-            const level = 0;
-            const internalFormat = gl.RGBA8UI;
-            const border = 0;
-            const format = gl.RGBA_INTEGER;
-            const type = gl.UNSIGNED_BYTE;
-            const initConf = initialConfiguration.getData();
-            let data = new Uint8Array(textureSize * textureSize * 4);
-            for (let i = 0, j = 0; i < initConf.length; ++i) {
-                data[j++] = initConf[i];
-                data[j++] = initConf[i];
-                data[j++] = initConf[i];
-                data[j++] = initConf[i];
-            }
-            for (let i = initConf.length, j = initConf.length * 4; i < textureSize * textureSize; ++i) {
-                data[j++] = 0;
-                data[j++] = 0;
-                data[j++] = 0;
-                data[j++] = 0;
-            }
-            gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
-            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureSize, textureSize, border, format, type, data);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.bindTexture(gl.TEXTURE_2D, this.writeBuffer);
-            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureSize, textureSize, border, format, type, null);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            this.frameBuffer = gl.createFramebuffer();
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
             const attachmentPoint = gl.COLOR_ATTACHMENT0;
+            const level = 0;
             gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, this.writeBuffer, level);
         }
         this.renderProgram2DInfo = {
@@ -329,6 +301,41 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         const zFar = 1000.0;
         this.camera = new Camera(this.canvas, fieldOfView, aspect, zNear, zFar);
     }
+    setWorldState(config) {
+        const gl = this.gl;
+        const level = 0;
+        const internalFormat = gl.RGBA8UI;
+        const border = 0;
+        const format = gl.RGBA_INTEGER;
+        const type = gl.UNSIGNED_BYTE;
+        const initConf = config.getData();
+        const textureSize = this.textureSize;
+        let data = new Uint8Array(textureSize * textureSize * 4);
+        for (let i = 0, j = 0; i < initConf.length; ++i) {
+            data[j++] = initConf[i];
+            data[j++] = initConf[i];
+            data[j++] = initConf[i];
+            data[j++] = initConf[i];
+        }
+        for (let i = initConf.length, j = initConf.length * 4; i < textureSize * textureSize; ++i) {
+            data[j++] = 0;
+            data[j++] = 0;
+            data[j++] = 0;
+            data[j++] = 0;
+        }
+        gl.bindTexture(gl.TEXTURE_2D, this.readBuffer);
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureSize, textureSize, border, format, type, data);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.bindTexture(gl.TEXTURE_2D, this.writeBuffer);
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureSize, textureSize, border, format, type, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    }
     getHTML() {
         return this.rootElement;
     }
@@ -359,9 +366,27 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         const that = this;
         {
             let controlTable = new Table(2);
-            let label = document.createElement('p');
+            let label;
+            label = document.createElement('p');
+            label.innerHTML = "New pop. density: ";
+            const defaultPopDensity = 0.34;
+            let popDensityInput = new NumberInput(defaultPopDensity, false, () => {
+                let v = popDensityInput.getValue();
+                if (!popDensityInput.isValid() || v < 0 || v > 1) {
+                    popDensityInput.setValue(defaultPopDensity);
+                }
+            }, 0, 1);
+            controlTable.addRow([label, popDensityInput.getHTML()]);
+            let resetConfigButton = document.createElement("button");
+            resetConfigButton.innerText = "Randomize world";
+            resetConfigButton.addEventListener("click", () => {
+                let newConfig = Configuration.makeRandom(that.cellularAutomaton.getNumDimensions(), that.worldSize, that.cellularAutomaton.getNumStates(), popDensityInput.getValue());
+                that.setWorldState(newConfig);
+            });
+            controlTable.addRow([resetConfigButton, null]);
+            label = document.createElement('p');
             label.innerHTML = "Update Rate: ";
-            const defaultUpdateRate = 3;
+            const defaultUpdateRate = 60;
             this.ui.updateRateInput = new NumberInput(defaultUpdateRate, false, null, 0);
             controlTable.addRow([label, this.ui.updateRateInput.getHTML()]);
             label = document.createElement('p');
@@ -390,7 +415,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         statTable.addRow([label, this.fpsCounter.getHTML()]);
         label = document.createElement('p');
         label.innerHTML = "Population Density:";
-        this.popDensityDisplay = new NumberDisplay(2);
+        this.popDensityDisplay = new NumberDisplay(5);
         statTable.addRow([label, this.popDensityDisplay.getHTML()]);
         label = document.createElement('p');
         label.innerHTML = "Live Cells:";

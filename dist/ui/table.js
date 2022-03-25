@@ -9,8 +9,10 @@ export class Table {
         assert(elements.length == this.columns);
         let r = this.tableElem.insertRow();
         elements.forEach(e => {
-            let c = r.insertCell();
-            c.appendChild(e);
+            if (e != null) {
+                let c = r.insertCell();
+                c.appendChild(e);
+            }
         });
     }
     getHTML() {

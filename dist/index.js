@@ -9,6 +9,7 @@ import { NumberInput } from "./ui/number_input.js";
 import { runAllTests } from "./test.js";
 import { CAGreatestHits } from "./ui/ca_greatest_hits.js";
 import { assert } from "./assert.js";
+import { ConstructionFeedbackPanel } from "./ui/construction_feedback_panel.js";
 let appStateMachine;
 runAllTests();
 class ConstructionState extends State {
@@ -20,7 +21,8 @@ class ConstructionState extends State {
             reproduceInputLow: null,
             reproduceInputHigh: null,
             worldSizeInput: null,
-            popDensityInput: null
+            popDensityInput: null,
+            constructionFeedbackPanel: null
         };
     }
     onEnter() {
@@ -63,8 +65,8 @@ class ConstructionState extends State {
                 that.dimensions = 3;
                 that.revalidate();
             });
-            button3d.checked = true;
-            this.dimensions = 3;
+            button2d.checked = true;
+            this.dimensions = 2;
             div.appendChild(dimensionalityDiv);
         }
         this.ui.stayAliveInputLow = new NumberInput(2, true, () => { that.revalidate(); }, 0);
@@ -138,7 +140,12 @@ class ConstructionState extends State {
             }
             that.revalidate();
         });
-        horizontalDiv1.appendChild(CAGH.getHTML());
+        let rightDiv = document.createElement("div");
+        rightDiv.appendChild(CAGH.getHTML());
+        horizontalDiv1.appendChild(rightDiv);
+        let constructionFeedbackPanel = new ConstructionFeedbackPanel();
+        rightDiv.appendChild(constructionFeedbackPanel.getHTML());
+        this.ui.constructionFeedbackPanel = constructionFeedbackPanel;
         this.myHTML = horizontalDiv1;
         document.getElementsByTagName("body")[0].appendChild(this.myHTML);
         this.revalidate();
@@ -154,7 +161,7 @@ class ConstructionState extends State {
         }
         else {
             this.confirmButton.disabled = false;
-            console.log("lambda: " + this.prospectiveTransitionRule.langtonLambdaParameter());
+            this.ui.constructionFeedbackPanel.update(this.prospectiveTransitionRule);
         }
         while (this.errorBox.firstChild) {
             this.errorBox.removeChild(this.errorBox.lastChild);
