@@ -1,6 +1,6 @@
 import { assert } from "./assert.js";
 import { CellularAutomaton } from "./cellular_automaton.js";
-import { Configuration } from "./configuration";
+import { Configuration } from "./configuration.js";
 import { makeProgram } from "./gl_helpers.js";
 import { VoxelMesh } from "./voxel_mesh.js";
 import { Camera } from "./camera.js";
@@ -484,9 +484,37 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
         const that = this;
         {
             let controlTable = new Table(2);
-            let label = document.createElement('p');
+            let label;
+            
+            label = document.createElement('p');
+            label.innerHTML = "New pop. density: ";
+            const defaultPopDensity = 0.34;
+            let popDensityInput = new NumberInput(defaultPopDensity, false, () => {
+                    // Very rudimentary error detection and handling.
+                    // I don't want to overcomplicate the interface in simulation mode.
+                    let v = popDensityInput.getValue();
+                    if(!popDensityInput.isValid() || v < 0 || v > 1) {
+                        popDensityInput.setValue(defaultPopDensity);
+                    }
+            }, 0, 1);
+
+            controlTable.addRow([label, popDensityInput.getHTML()]);
+            let resetConfigButton = document.createElement("button");
+            resetConfigButton.innerText = "Randomize world";
+            resetConfigButton.addEventListener("click", () => {
+                let newConfig = Configuration.makeRandom(
+                    that.cellularAutomaton.getNumDimensions(),
+                    that.worldSize,
+                    that.cellularAutomaton.getNumStates(),
+                    popDensityInput.getValue()
+                );
+                that.setWorldState(newConfig);
+            });
+            controlTable.addRow([resetConfigButton, null]);
+
+            label = document.createElement('p');
             label.innerHTML = "Update Rate: ";
-            const defaultUpdateRate = 3;
+            const defaultUpdateRate = 60;
             this.ui.updateRateInput = new NumberInput(defaultUpdateRate, false, null, 0);
             controlTable.addRow([label, this.ui.updateRateInput.getHTML()]);
 

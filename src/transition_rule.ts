@@ -172,6 +172,7 @@ export class TotalisticTransitionRule extends TransitionRule {
      * State 0 is assumed to be the dead or "quiescent" state
     */
     public langtonLambdaParameter(): number {
+        // Way too small for 3D?
         let deadStateTransitions = 0;
         let liveStateTransitions = 0;
         const numNeighbours: number = this.getNeigbourhood().getNumNeighbours();
@@ -182,7 +183,6 @@ export class TotalisticTransitionRule extends TransitionRule {
                     deadStateTransitions += nChooseK(numNeighbours, n);
                 } else {
                     liveStateTransitions += nChooseK(numNeighbours, n);
-                    // console.log("live state transitions: " + );
                 }
             }
         }
