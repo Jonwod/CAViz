@@ -1,4 +1,5 @@
 import { makeProgram } from './gl_helpers.js';
+import { allCoordConvertFuncs, myMod } from './glsl_functions.js';
 export class VoxelMesh {
     constructor(gl, gridSize, voxelSize, gridSpacing) {
         this.gridSize = gridSize;
@@ -31,29 +32,13 @@ export class VoxelMesh {
 
                 // 2D texture but represents 3D world
                 uniform usampler2D uReadBuffer;
-
-                int myMod(int a, int b) {
-                    return a - b * int(a / b);
-                }
-
-                ivec3 to3DCoords(int i) {
-                    int planeSize = uWorldSize * uWorldSize;
-                    int plane = i / planeSize;
-                    int planeRemainder = myMod(i, planeSize);
-                    int row = planeRemainder / uWorldSize;
-                    int rowRemainder = myMod(planeRemainder, uWorldSize);
-                    return ivec3(plane, row, rowRemainder);
-                }
-
-                int toIndex(ivec3 coords) {
-                    return coords.x * uWorldSize * uWorldSize + coords.y * uWorldSize + coords.z;
-                }
-
-                ivec2 toTextureCoords(int index) {
-                    int row = index / textureSize(uReadBuffer, 0).x;
-                    int rowRemainder = myMod(index, textureSize(uReadBuffer, 0).x);
-                    return ivec2(row, rowRemainder);
-                }
+            `
+                +
+                    myMod
+                +
+                    allCoordConvertFuncs
+                +
+                    `
 
                 uint getCellState(int index) {
                     return texelFetch(uReadBuffer, toTextureCoords(index), 0).a;

@@ -8,6 +8,7 @@ import { NumberDisplay } from "./ui/number_display.js";
 import { ToggleButton } from "./ui/toggle_button.js";
 import { Table } from "./ui/table.js";
 import { NumberInput } from "./ui/number_input.js";
+import { allCoordConvertFuncs, myMod } from './glsl_functions.js';
 export class CASimulation {
     constructor(ca, initialConfiguration, width, height) {
         this.terminated = false;
@@ -117,37 +118,11 @@ export class CASimulation {
         `;
         if (ca.getNumDimensions() > 2) {
             this.computeProgramInfo.fragmentShaderSource +=
-                `
-            int myMod(int a, int b) {
-                return a - b * int(a / b);
-            }
-
-            ivec3 to3DCoords(int i) {
-                int planeSize = uWorldSize * uWorldSize;
-                int plane = i / planeSize;
-                int planeRemainder = myMod(i, planeSize);
-                int row = planeRemainder / uWorldSize;
-                int rowRemainder = myMod(planeRemainder, uWorldSize);
-                return ivec3(plane, row, rowRemainder);
-            }
-
-            int toIndex(ivec3 coords) {
-                return coords.x * uWorldSize * uWorldSize + coords.y * uWorldSize + coords.z;
-            }
-
-            ivec2 toTextureCoords(int index) {
-                int row = index / textureSize(uReadBuffer, 0).x;
-                int rowRemainder = myMod(index, textureSize(uReadBuffer, 0).x);
-                return ivec2(row, rowRemainder);
-            }
-
-
-            ivec2 toTextureCoords(ivec3 worldCoords) {
-                int index = toIndex(worldCoords);
-                return toTextureCoords(index);
-            }
-
-
+                myMod
+                    +
+                        allCoordConvertFuncs
+                    +
+                        `
             uint getCellState(int index) {
                 return texelFetch(uReadBuffer, toTextureCoords(index), 0).a;
             }
@@ -168,6 +143,7 @@ export class CASimulation {
                 float(texSize.y) * vTexCoord.y
             );
 
+            uint thisCellState = texture(uReadBuffer, vTexCoord).a;
             uint n = 0u;
         `;
         if (ca.getNumDimensions() === 2) {
@@ -195,9 +171,6 @@ export class CASimulation {
             for(int dx = -1; dx < 2; ++dx) {
                 for(int dy = -1; dy < 2; ++dy) {
                     for(int dz = -1; dz < 2; ++dz) {
-                        // if(dx == 0  &&  dy == 0  &&  dz == 0) {
-                        //     continue;
-                        // }
                         ivec3 neighbour3DCoords = i3DCoords + ivec3(dx, dy, dz);
                         // ---- Wrap around ----
                         neighbour3DCoords.x -= uWorldSize * (neighbour3DCoords.x / uWorldSize);
@@ -208,7 +181,7 @@ export class CASimulation {
                     }
                 }
             }
-            uint thisCellState = texture(uReadBuffer, vTexCoord).a;
+            
             // Already counted thisCellState in the loop to avoid branching
             n -= thisCellState;
             `;
