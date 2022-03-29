@@ -299,20 +299,6 @@ export class CASimulation {
             assert(false, `sorry, ${ca.getNumDimensions()} dimensions not yet supported`);
         }
 
-        // this.computeProgramInfo.fragmentShaderSource +=
-        // `
-        // uint x = texture(uReadBuffer, vTexCoord).a;
-        // uint newState = x;
-        // if(x == 1u  &&  (n < 2u || n > 3u)) {
-        //     newState = 0u;
-        // }
-        // else if(x == 0u  &&  n == 3u) {
-        //     newState = 1u;
-        // }
-
-        // fragColor = uvec4(0, 0, 0, newState);
-        // `;
-
         this.computeProgramInfo.fragmentShaderSource += 
 `
 fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(thisCellState, n));
