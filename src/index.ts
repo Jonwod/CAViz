@@ -151,7 +151,7 @@ class ConstructionState extends State {
         div.appendChild(this.errorBox);
 
         let CAGH: CAGreatestHits = new CAGreatestHits();
-        CAGH.bindToOnSelected((name: string, ca: TotalisticCAParameters) => {
+        CAGH.bindToOnSelected((name: string, ca: TotalisticCAParameters, popDensity) => {
             that.ui.stayAliveInputLow.setValue(ca.stayAlive.getStart());
             that.ui.stayAliveInputHigh.setValue(ca.stayAlive.getEnd());
             that.ui.reproduceInputLow.setValue(ca.reproduce.getStart());
@@ -166,6 +166,11 @@ class ConstructionState extends State {
                 that.dimensions = 3;
             } else {
                 assert(false, "Only 2 or 3 dimensions supported");
+            }
+
+            if(popDensity !== null) {
+                that.ui.popDensityInput.setValue(popDensity);
+
             }
             that.revalidate();
         });
