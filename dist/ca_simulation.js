@@ -195,9 +195,9 @@ export class CASimulation {
             for(int dx = -1; dx < 2; ++dx) {
                 for(int dy = -1; dy < 2; ++dy) {
                     for(int dz = -1; dz < 2; ++dz) {
-                        if(dx == 0  &&  dy == 0  &&  dz == 0) {
-                            continue;
-                        }
+                        // if(dx == 0  &&  dy == 0  &&  dz == 0) {
+                        //     continue;
+                        // }
                         ivec3 neighbour3DCoords = i3DCoords + ivec3(dx, dy, dz);
                         // ---- Wrap around ----
                         neighbour3DCoords.x -= uWorldSize * (neighbour3DCoords.x / uWorldSize);
@@ -208,6 +208,9 @@ export class CASimulation {
                     }
                 }
             }
+            uint thisCellState = texture(uReadBuffer, vTexCoord).a;
+            // Already counted thisCellState in the loop to avoid branching
+            n -= thisCellState;
             `;
         }
         else {
@@ -215,8 +218,7 @@ export class CASimulation {
         }
         this.computeProgramInfo.fragmentShaderSource +=
             `
-uint x = texture(uReadBuffer, vTexCoord).a;
-fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(x, n));
+fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(thisCellState, n));
 `;
         this.computeProgramInfo.fragmentShaderSource +=
             `
