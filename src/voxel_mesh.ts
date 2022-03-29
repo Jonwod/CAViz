@@ -1,9 +1,12 @@
 import {makeProgram} from './gl_helpers.js';
 declare var mat4: any;
 
-// A lot of this is taken/adapted from Mozilla's WebGL tutorials, particularly:
+// The basic rendering is taken/adapted from Mozilla's WebGL tutorials, particularly:
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Lighting_in_WebGL
 
+/**
+ * Renders an evenly spaced grid of cubes based on a texture representing the voxel data.
+ */
 export class VoxelMesh {
     private buffers: {
         position;
@@ -38,6 +41,12 @@ export class VoxelMesh {
     private voxelSize: number;
     private gridSpacing: number;
 
+    /**
+     * @param gl The WebGL context
+     * @param gridSize The dimensions of the square voxel grid (i.e. the length of a side, in voxels)
+     * @param voxelSize The size of a voxel (i.e. the sides of an individual cube, in world space)
+     * @param gridSpacing The distance between voxels, in world space.
+     */
     constructor(gl: WebGL2RenderingContext, gridSize: number, voxelSize: number, gridSpacing: number) {
         this.gridSize = gridSize;
         this.voxelSize = voxelSize;
@@ -237,6 +246,16 @@ export class VoxelMesh {
         };
     }
 
+    /**
+     * Renders the cubes.
+     * @param modelViewMatrix Transform of the whole voxel mesh
+     * @param perspectiveMatrix The camera perspective
+     * @param cellDataTexture Only the alpha channel is used. 0 indicates an empty cell, 1 indicates a full cell. 
+     *                        For the mapping between pixel coords and voxel coords, consider the texture to be a
+     *                        1D array (rows then columns). The elements map to voxel coords such that rows in the
+     *                        local z axis are filled first, overflowing to a new row in the y direction, overflowing
+     *                        to a new vertically oriented plane in the x direction.
+     */
     public render(modelViewMatrix, perspectiveMatrix, cellDataTexture: WebGLTexture) {
         const programInfo = this.programInfo;
         const buffers = this.buffers;
