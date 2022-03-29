@@ -38,17 +38,10 @@ export function transitionRuleFromBaysCoding(nDimensions: number, keepAlive: Ran
         });
     }
 
-    if(reproduce.getStart() - keepAlive.getEnd() > 1) {
+    if(keepAlive.getEnd() < (neigbourhood.getNumNeighbours())) {
         deathTransitions.transitions.push({
             endState: 0,
-            range: new Range(keepAlive.getEnd()+1, reproduce.getStart()-1)
-        });
-    }
-
-    if(reproduce.getEnd() < (neigbourhood.getNumNeighbours())) {
-        deathTransitions.transitions.push({
-            endState: 0,
-            range: new Range(reproduce.getEnd() + 1, neigbourhood.getNumNeighbours())
+            range: new Range(keepAlive.getEnd() + 1, neigbourhood.getNumNeighbours())
         });
     }
 
