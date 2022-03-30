@@ -12,7 +12,9 @@ export class NumberInput {
             this.inputElem.setAttribute("min", min.toString());
         }
         if(max !== null) {
-            this.inputElem.setAttribute("max", max.toString());
+            // This didn't seem to be doing anything other than force the box to be too small
+            // in Chrome
+            // this.inputElem.setAttribute("max", max.toString());
         }
         let that = this;
         this.inputElem.addEventListener("change", (e) => {

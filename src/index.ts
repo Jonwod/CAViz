@@ -113,7 +113,7 @@ class ConstructionState extends State {
         }
 
         this.ui.worldSizeInput = new NumberInput(100, true, () => {that.revalidate();}, 0);
-        this.ui.popDensityInput = new NumberInput(0.34, false, () => {that.revalidate();}, 0, 1);
+        this.ui.popDensityInput = new NumberInput(0.34, false, () => {that.revalidate();}, 0);
 
         {
             let configDiv  = document.createElement("div");
