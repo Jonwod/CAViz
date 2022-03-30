@@ -10,7 +10,6 @@ export class NumberInput {
             this.inputElem.setAttribute("min", min.toString());
         }
         if (max !== null) {
-            this.inputElem.setAttribute("max", max.toString());
         }
         let that = this;
         this.inputElem.addEventListener("change", (e) => {
