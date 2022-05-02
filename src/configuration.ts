@@ -5,15 +5,22 @@ import { Range } from "./range.js";
 import * as ExtraMath from "./generic/math/extra_math.js";
 
 export class Configuration {
+    /**
+     * An empty (all dead) configuration.
+     */
+    constructor(dimensions: number, size: number, numStates: number) {
+        this.dimensions = dimensions;
+        this.size = size;
+        this.cells = new Uint8Array(Math.pow(size, dimensions));
+    }
+
     static makeRandom(dimensions: number, size: number, numStates: number, populationDensity: number): Configuration {
-        let c = new Configuration();
+        let c = new Configuration(dimensions, size, numStates);
         c.cells = new Uint8Array(Math.pow(size, dimensions));
         for(let i = 0; i < Math.pow(size, dimensions); ++i) {
             // TODO: This would be better as a probability distribution over the states
             c.cells[i] = (Math.random() < populationDensity ? (Math.floor(Math.random() * (numStates - 1)) + 1) : 0);
         }
-        c.size = size;
-        c.dimensions = dimensions;
         return c;
     }
 
@@ -40,6 +47,22 @@ export class Configuration {
 
     public getSize(): number {
         return this.size;
+    }
+
+    /**
+     * Sets the value of a cell.
+     * @param position N-dimension coordinates of cell. If out of bounds,
+     *  will modified so as to be in bounds, by modular arithmetic.
+     *  Note that this will have the effect of making the space topologically
+     *  a torus.
+     */
+    public set(position: number[], state: number): void {
+        assert(position.length === this.dimensions, 
+            "wrong number of dimensions supplied to Configuration.set()");
+        for(let i = 0; i < position.length; ++i) {
+            position[i] = ExtraMath.trueMod(position[i], this.size);
+        }
+        this.cells[this.to1D(position)] = state;
     }
 
     public update(transitionRule: TransitionRule) {
