@@ -90,7 +90,7 @@ export class CASimulation {
 
         this.makeUI(width, height);
 
-        const gl = this.canvas.getContext("webgl2")
+        const gl = this.canvas.getContext("webgl2");
         if(gl === null) {
             alert("Unable to initialize WebGL. Your browser or machine may not support it.");
             return null;
@@ -475,7 +475,7 @@ fragColor = uvec4(0, 0, 0, totalisticTransitionFunction(thisCellState, n));
 
             label = document.createElement('p');
             label.innerHTML = "Update Rate: ";
-            const defaultUpdateRate = 60;
+            const defaultUpdateRate = 1;
             this.ui.updateRateInput = new NumberInput(defaultUpdateRate, false, null, 0);
             controlTable.addRow([label, this.ui.updateRateInput.getHTML()]);
 
